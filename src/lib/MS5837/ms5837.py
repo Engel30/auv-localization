@@ -1,4 +1,4 @@
-import smbus    
+import smbus2
 from time import sleep
 
 # Models
@@ -47,7 +47,7 @@ class MS5837(object):
         self._model = model
         
         try:
-            self._bus = smbus.SMBus(bus)
+            self._bus = smbus2.SMBus(bus)
             print("i2c depth meter")
         except Exception as e:
             print("Bus %d is not available." % bus)
@@ -140,11 +140,7 @@ class MS5837(object):
         
     # Depth relative to MSL pressure in given fluid density
     def depth(self):
-        return (self.pressure(UNITS_Pa)-101300)/(self._fluidDensity*9.80665)
-    
-    # Altitude relative to MSL pressure
-    def altitude(self):
-        return (1-pow((self.pressure()/1013.25),.190284))*145366.45*.3048        
+        return (self.pressure(UNITS_Pa)-101300)/(self._fluidDensity*9.80665)    
     
     # Cribbed from datasheet
     def _calculate(self):

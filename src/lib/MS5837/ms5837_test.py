@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import ms5837
+import lib.MS5837.ms5837 as ms5837
 import time
 import logging
 from datetime import datetime
@@ -11,14 +11,14 @@ logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('ms5837_data.log'),
+        logging.FileHandler('ms5837_smbus2_data.log'),
         logging.StreamHandler()
     ]
 )
 
 def test_sensor(num_readings=10, interval=1.0, model='30BA'):
     """
-    Test del sensore MS5837
+    Test del sensore MS5837 con smbus2
     
     Args:
         num_readings: numero di letture da effettuare
@@ -27,7 +27,7 @@ def test_sensor(num_readings=10, interval=1.0, model='30BA'):
     """
     
     # Inizializza sensore
-    logging.info("=== Inizializzazione sensore MS5837-%s ===" % model)
+    logging.info("=== Inizializzazione sensore MS5837-%s (smbus2) ===" % model)
     
     if model == '30BA':
         sensor = ms5837.MS5837_30BA()
@@ -64,14 +64,11 @@ def test_sensor(num_readings=10, interval=1.0, model='30BA'):
                 # Profondità
                 depth_m = sensor.depth()
                 
-                # Altitudine
-                altitude_m = sensor.altitude()
-                
                 # Log dei dati
                 logging.info(
                     "Lettura #%d | Temp: %.2f°C | Pressione: %.2f mbar (%.0f Pa) | "
-                    "Profondità: %.2f m | Altitudine: %.2f m" % 
-                    (i+1, temp_c, pressure_mbar, pressure_pa, depth_m, altitude_m)
+                    "Profondità: %.2f m" % 
+                    (i+1, temp_c, pressure_mbar, pressure_pa, depth_m)
                 )
                 
             else:
@@ -91,5 +88,5 @@ def test_sensor(num_readings=10, interval=1.0, model='30BA'):
     return True
 
 if __name__ == "__main__":
-    # Test con 20 letture ogni 2 secondi
-    test_sensor(num_readings=20, interval=2.0, model='30BA')
+    # Test con 500 letture ogni 0.1 secondi
+    test_sensor(num_readings=500, interval=0.1, model='30BA')
