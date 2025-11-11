@@ -1,4 +1,4 @@
-import smbus
+import smbus2
 
 class openups2(object):
 	# Registers
@@ -11,8 +11,8 @@ class openups2(object):
 	
 	def __init__(self, bus=1, tipo="LIFEP04"):
 		try:
-			self._bus = smbus.SMBus(bus)
-			print("openups2 i2c inizializzato")
+			self._bus = smbus2.SMBus(bus)
+			print("openups2 i2c inizializzato (smbus2)")
 		except Exception as e:
 			print(f"Bus {bus} non disponibile: {e}")
 			print("Bus disponibili: /dev/i2c*")
@@ -27,7 +27,7 @@ class openups2(object):
 			self.voltage = 9.6
 		elif tipo == "LI-ON":
 			self.voltage = 11.1
-		
+	
 	def read_volt(self):
 		if self._bus:
 			self.voltage = self._bus.read_word_data(self._UPS_ADDR, self._UPS_VOLT)
@@ -44,3 +44,8 @@ class openups2(object):
 			self.abs_charge = self._bus.read_word_data(self._UPS_ADDR, self._UPS_PERCA)
 			self.err = self._bus.read_word_data(self._UPS_ADDR, self._UPS_ERR)
 		return [self.rel_charge, self.abs_charge, self.err]
+	
+	def close(self):
+		"""Chiude la connessione I2C"""
+		if self._bus:
+			self._bus.close()

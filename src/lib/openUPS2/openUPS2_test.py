@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 import time
 import datetime
-from openups2 import openups2
+from lib.openUPS2.openUPS2 import openups2
 
 def test_ups(tipo="LIFEP04", intervallo=5, durata=60):
     """
-    Test acquisizione dati openUPS2
+    Test acquisizione dati openUPS2 con smbus2
     
     Args:
         tipo: tipo batteria ("LIFEP04" o "LI-ON")
@@ -33,7 +33,7 @@ def test_ups(tipo="LIFEP04", intervallo=5, durata=60):
     
     with open(log_file, 'w') as f:
         # Header
-        f.write("# openUPS2 Log\n")
+        f.write("# openUPS2 Log (smbus2)\n")
         f.write(f"# Tipo batteria: {tipo}\n")
         f.write(f"# Timestamp, Voltage(V), Current(A), Carica_Rel(%), Carica_Abs(%), Errore\n")
         
@@ -64,11 +64,12 @@ def test_ups(tipo="LIFEP04", intervallo=5, durata=60):
             print("\n\nTest interrotto dall'utente")
         except Exception as e:
             print(f"\n\nErrore durante l'acquisizione: {e}")
+        finally:
+            ups.close()
     
     print(f"\nTest completato. Log salvato in: {log_file}")
 
 
 if __name__ == "__main__":
     # Test con batteria LIFEP04, acquisizione ogni 5 secondi per 60 secondi
-    # Per test continuo impostare durata=0
     test_ups(tipo="LIFEP04", intervallo=5, durata=60)
