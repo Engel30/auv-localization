@@ -64,14 +64,11 @@ def test_sensor(num_readings=10, interval=1.0, model='30BA'):
                 # Profondità
                 depth_m = sensor.depth()
                 
-                # Altitudine
-                altitude_m = sensor.altitude()
-                
                 # Log dei dati
                 logging.info(
                     "Lettura #%d | Temp: %.2f°C | Pressione: %.2f mbar (%.0f Pa) | "
-                    "Profondità: %.2f m | Altitudine: %.2f m" % 
-                    (i+1, temp_c, pressure_mbar, pressure_pa, depth_m, altitude_m)
+                    "Profondità: %.2f m" % 
+                    (i+1, temp_c, pressure_mbar, pressure_pa, depth_m)
                 )
                 
             else:
@@ -91,5 +88,5 @@ def test_sensor(num_readings=10, interval=1.0, model='30BA'):
     return True
 
 if __name__ == "__main__":
-    # Test con 20 letture ogni 2 secondi
-    test_sensor(num_readings=20, interval=2.0, model='30BA')
+    # Test con 500 letture ogni 0.1 secondi
+    test_sensor(num_readings=500, interval=0.1, model='30BA')
