@@ -19,7 +19,7 @@ except ImportError:
 # CONFIG
 CONTROL_LOOP_MS = 20
 IMU_PORT = '/dev/ttyUSB0'
-DEPTH_I2C_BUS = 1
+DEPTH_I2C_BUS = 0
 
 # SENSOR DATA
 sensor_data = {
@@ -39,7 +39,7 @@ def depth_thread():
     
     if MS5837_AVAILABLE:
         try:
-            sensor = MS5837_30BA(DEPTH_I2C_BUS)
+            sensor = MS5837_30BA(bus=DEPTH_I2C_BUS)
             if sensor.init():
                 print("[DEPTH] Sensor initialized")
             else:
