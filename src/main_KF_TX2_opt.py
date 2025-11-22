@@ -217,8 +217,8 @@ def depth_simulation_thread():
 
     if USE_REAL_SENSORS and MS5837_AVAILABLE:
         try:
-            sensor = MS5837_30BA(bus=DEPTH_I2C_BUS)
-            if sensor.init():
+            sensor = MS5837_30BA()
+            if sensor.init(bus=DEPTH_I2C_BUS):
                 print("[DEPTH] Sensore MS5837 inizializzato")
                 use_simulation = False
             else:
