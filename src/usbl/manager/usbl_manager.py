@@ -200,43 +200,51 @@ class UsblManager:
 
         logging.info("Manager stopped")
 
-    async def _usbl_reader(self):
-        """Reads data via TCP from USBL and pass it to serial."""
-        logging.debug("Started")
-        while True:
-            try:
-                line: bytes = await self._usbl_stream_reader.readline()
-                if not line:
-                    logging.warning("USBL closed connection")
+        async def _usbl_reader(self):
+            """Reads data via TCP from USBL and pass it to serial."""
+            logging.debug("Started")
+            while True:
+                try:
+                    line: bytes = await self._usbl_stream_reader.readline()
+                    if not line:
+                        logging.warning("USBL closed connection")
+                        break
+                    elif len(line) == 0:
+                        continue
+                    line = line.strip()
+
+                    # Try to decode for logging - but keep original bytes for processing
+                    try:
+                        decoded_line = line.decode(self._codec)
+                        logging.debug(f"From USBL: {decoded_line}")
+                    except UnicodeDecodeError:
+                        # Log as hex if decoding fails
+                        logging.debug(f"From USBL (binary): {line.hex()}")
+                        logging.warning(f"Received binary data that couldn't be decoded as UTF-8: {line[:100]}")
+
+                    if self.usbl_communication_ready_event.is_set():
+                        is_good_response, enu_coordinates, message = decode_usbl_response(line,
+                                                                                        UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT)
+                        if is_good_response and message:
+                            # Forward message to UART (it should contain the message the other MCU received in UART)
+                            await self.send_to_uart(message)
+                    else:
+                        is_good_response = decode_usbl_response(line, UsblCommand.FIRMWARE_INFORMATION)
+                        if is_good_response:
+                            self.usbl_communication_ready_event.set()
+                            logging.info("USBL is connected and ready to receive commands.")
+                except asyncio.CancelledError:
                     break
-                elif len(line) == 0:
-                    continue
-                line = line.strip()
-
-                logging.debug(f"From USBL: {line}")
-
-                if self.usbl_communication_ready_event.is_set():
-                    is_good_response, enu_coordinates, message = decode_usbl_response(line,
-                                                                                      UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT)
-                    if is_good_response and message:
-                        # Forward message to UART (it should contain the message the other MCU received in UART)
-                        await self.send_to_uart(message)
-                else:
-                    is_good_response = decode_usbl_response(line, UsblCommand.FIRMWARE_INFORMATION)
-                    if is_good_response:
-                        self.usbl_communication_ready_event.set()
-                        logging.info("USBL is connected and ready to receive commands.")
-            except asyncio.CancelledError:
-                # This is thrown when my_task.cancel() and the associated method _my_task() is blocked in `await`.
-                # It is a trigger at end of the task as soon as requested, so this is the expected behavior
-                break
-            except ConnectionResetError:
-                logging.error("TCP connection was forcibly closed by the USBL.")
-                break
-            except Exception as e:
-                logging.critical(f"Error: {e}")
-                break
-        logging.debug("Finished")
+                except UnicodeDecodeError as e:
+                    logging.error(f"Unicode decode error: {e}. Raw data (hex): {line.hex() if 'line' in locals() else 'N/A'}")
+                    continue  # Skip this message and continue processing
+                except ConnectionResetError:
+                    logging.error("TCP connection was forcibly closed by the USBL.")
+                    break
+                except Exception as e:
+                    logging.critical(f"Error: {e}")
+                    break
+            logging.debug("Finished")
 
     async def _usbl_writer(self):
         """Waits for data on the queue and writes it to the USBL via TCP socket """

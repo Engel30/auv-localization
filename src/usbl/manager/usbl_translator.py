@@ -112,35 +112,42 @@ def decode_usbl_response(decoded_message: bytes, initial_command: str) -> tuple[
             logging.warning(f"Instant message was NOT delivered to target_id: {arguments[1]}")
         elif keyword == "RECVIM":
             try:
+                # Check integrity FIRST before parsing
+                integrity = int(arguments[8])
+                
+                # Value from documentation: integrity > 100 means valid
+                if integrity <= 100:
+                    logging.warning(f"Received message with LOW integrity ({integrity}). Discarding to avoid corrupted data.")
+                    return False, None, None
+                
                 # Check if there's message payload (as expected), if yes then extract
-                # See syntax below (in encode_usbl_response) to understand the reason behind this split
-                # .rsplit() reads from the right to left (in contrast to .split())
                 _, message = str_decoded_message.rsplit(',[', 1)
 
-            except ValueError:
-                logging.error("The separators ,[ was expected in the message received but they were not found. Please check syntax of sending and receiving messages.")
+            except ValueError as e:
+                logging.error(f"Cannot parse RECVIM message: {e}")
+                logging.debug(f"Raw message: {str_decoded_message}")
+                return False, None, None
+            except Exception as e:
+                logging.error(f"Error processing RECVIM: {e}")
                 return False, None, None
 
             # Remove terminators
             message = message.strip()
 
+            # Try to parse as JSON
             if message.startswith("{"):
                 try:
                     json_message = json.loads(message)
                     message = json.dumps(json_message)
                 except Exception:
-                    # It could well be not a json, skipping...
                     pass
 
-
-            integrity = int(arguments[8])
-
-            # Value from documentation
             if integrity > 100:
                 integrity_check = "valid"
             else:
                 integrity_check = "invalid"
-            logging.info(f"Message received from target {arguments[3]} with {integrity_check} integrity: {message}")
+            
+            logging.info(f"Message received from target {arguments[3]} with {integrity_check} integrity ({integrity}): {message}")
             return True, None, message.encode(CODEC)
         else:
             logging.debug(f"Keyword received: {keyword}")
