@@ -2,11 +2,12 @@ import asyncio
 import logging
 
 from settings import TRANSPONDER_CONFIG, INSTANT_MESSAGE_INTERVAL_SEC, USBL_PORT, CODEC, \
-    SERIAL_PORT_ID, SERIAL_BAUDRATE, USBL_CONNECTION_TIMEOUT, SERIAL_CONNECTION_TIMEOUT, DUMMY_TEST_CONFIG
+    SERIAL_PORT_ID, SERIAL_BAUDRATE, USBL_CONNECTION_TIMEOUT, SERIAL_CONNECTION_TIMEOUT, DUMMY_TEST_CONFIG, IS_TRANSCEIVER, CONFIG
 from manager.usbl_manager import UsblManager
 
 # Possible values (check bottom of settings.py): TRANSPONDER_CONFIG, TRANSCEIVER_CONFIG
-USBL_IP, LOCALIZATION_TARGET_IP = DUMMY_TEST_CONFIG # CHANGE THIS
+USBL_IP, LOCALIZATION_TARGET_IP = CONFIG
+# USBL_IP, LOCALIZATION_TARGET_IP = DUMMY_TEST_CONFIG old implementation
 
 class TaskNameFilter(logging.Filter):
     """Add taskName to log records when available"""
@@ -26,7 +27,8 @@ async def main():
         localization_target_id=LOCALIZATION_TARGET_IP,
         serial_port_id=SERIAL_PORT_ID,
         serial_baudrate=SERIAL_BAUDRATE,
-        serial_connection_timeout=SERIAL_CONNECTION_TIMEOUT
+        serial_connection_timeout=SERIAL_CONNECTION_TIMEOUT,
+        is_transciever= IS_TRANSCEIVER
     ) as m:
         manager_task = asyncio.create_task(
             coro=m.run(),
