@@ -5,9 +5,9 @@ import math
 from datetime import datetime
 
 # ==================== CONFIGURATION ====================
-TRANSPONDER_ID = 3
 TRANSCEIVER_ID = 2
-USBL_IP = "192.168.0.232"  # Transponder IP
+TRANSPONDER_ID = 3
+USBL_IP = "192.168.0.139"  # Transceiver IP
 USBL_PORT = 9200
 CODEC = "utf-8"
 SPEED_OF_SOUND_MPS = 1500.0
@@ -15,13 +15,13 @@ SPEED_OF_SOUND_MPS = 1500.0
 # TX/RX Control
 ENABLE_TX = True   # Enable sending messages
 ENABLE_RX = True   # Enable receiving messages
-MESSAGE_INTERVAL = 2.0  # seconds between messages (if TX enabled)
+MESSAGE_INTERVAL = 3.0  # seconds between messages (if TX enabled)
 MIN_INTEGRITY = 50  # Minimum integrity for received messages
 
-# Message to send (if TX enabled)
+# Message to send (if TX enabled) - Keep under 63 bytes!
 TX_MESSAGE = {
-    "device": "transponder",
-    "status": "active"
+    "dev": "R",
+    "cmd": "ping"
 }
 
 # ========================================================
@@ -53,7 +53,7 @@ def angles_to_enu(azimuth_deg, elevation_deg, range_m):
 
 def encode_message(target_id: int, payload: dict) -> bytes:
     payload_str = json.dumps(payload, separators=(',', ':'))
-    if len(payload_str) > 200:
+    if len(payload_str) > 63:
         raise ValueError("Message too long (max 63 bytes)")
     payload_str = f"[{payload_str}"
     command = f"AT*SENDIM,p0,{len(payload_str)},{target_id},ack,{payload_str}"
@@ -173,7 +173,7 @@ async def response_reader(reader: asyncio.StreamReader):
                     logging.info("✓ Send command accepted")
             
             elif msg_type == "DELIVEREDIM":
-                logging.info(f"✓ Message delivered to transceiver (ID {data['target_id']})")
+                logging.info(f"✓ Message delivered to transponder (ID {data['target_id']})")
             
             elif msg_type == "FAILEDIM":
                 logging.warning(f"✗ Message delivery failed")
@@ -187,8 +187,9 @@ async def response_reader(reader: asyncio.StreamReader):
                 
                 logging.info(
                     f"\n{'='*70}\n"
-                    f"📍 MY POSITION (from angles) #{position_stats['usblangles']}\n"
+                    f"📍 TRANSPONDER POSITION (from angles) #{position_stats['usblangles']}\n"
                     f"{'='*70}\n"
+                    f"  Target ID:  {data['target_id']}\n"
                     f"  Azimuth:    {data['azimuth']:>7.2f}° | Elevation: {data['elevation']:>7.2f}° | Range: {data['range']:>7.2f}m\n"
                     f"  East:       {data['east']:>7.2f} m {'(west)' if data['east'] < 0 else '(east)'}\n"
                     f"  North:      {data['north']:>7.2f} m {'(south)' if data['north'] < 0 else '(north)'}\n"
@@ -207,8 +208,9 @@ async def response_reader(reader: asyncio.StreamReader):
                     
                     logging.info(
                         f"\n{'='*70}\n"
-                        f"📍 MY POSITION (motion-compensated) #{position_stats['usbllong']}\n"
+                        f"📍 TRANSPONDER POSITION (motion-compensated) #{position_stats['usbllong']}\n"
                         f"{'='*70}\n"
+                        f"  Target ID: {data['target_id']}\n"
                         f"  East:  {data['east']:>7.2f} m | North: {data['north']:>7.2f} m | Up: {data['up']:>7.2f} m\n"
                         f"  Distance: {data['distance_3d']:>7.2f} m | Uncertainty: ±{data['uncertainty']:.2f} m\n"
                         f"{'='*70}"
@@ -226,7 +228,7 @@ async def response_reader(reader: asyncio.StreamReader):
                         f"\n{'='*70}\n"
                         f"📨 RECEIVED MESSAGE #{message_stats['received']}\n"
                         f"{'='*70}\n"
-                        f"  From:      Transceiver ID {data['sender_id']}\n"
+                        f"  From:      Transponder ID {data['sender_id']}\n"
                         f"  RSSI:      {data['rssi']} dBm\n"
                         f"  Integrity: {data['integrity']} (threshold: >{MIN_INTEGRITY}) ✓\n"
                         f"  Content:   {data['message']}\n"
@@ -259,10 +261,9 @@ async def message_sender(writer: asyncio.StreamWriter):
             
             message_stats["sent"] += 1
             msg = TX_MESSAGE.copy()
-            msg["count"] = message_stats["sent"]
-            msg["timestamp"] = datetime.now().isoformat()
+            msg["c"] = message_stats["sent"]  # Just add count
             
-            encoded = encode_message(TRANSCEIVER_ID, msg)
+            encoded = encode_message(TRANSPONDER_ID, msg)
             writer.write(encoded)
             await writer.drain()
             
@@ -277,7 +278,7 @@ async def message_sender(writer: asyncio.StreamWriter):
 async def main():
     reader, writer = await asyncio.open_connection(USBL_IP, USBL_PORT)
     logging.info(f"✓ Connected to USBL at {USBL_IP}:{USBL_PORT}")
-    logging.info(f"📋 Transponder ID: {TRANSPONDER_ID} | Target: Transceiver ID {TRANSCEIVER_ID}")
+    logging.info(f"📋 Transceiver ID: {TRANSCEIVER_ID} | Target: Transponder ID {TRANSPONDER_ID}")
     logging.info(f"📊 TX: {'ON' if ENABLE_TX else 'OFF'} | RX: {'ON' if ENABLE_RX else 'OFF'}\n")
     
     reader_task = asyncio.create_task(response_reader(reader))
