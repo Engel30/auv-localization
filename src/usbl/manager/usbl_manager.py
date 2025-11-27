@@ -203,96 +203,96 @@ class UsblManager:
 
         logging.info("Manager stopped")
 
-        async def _usbl_reader(self):
-            """Reads data via TCP from USBL and pass it to serial."""
-            logging.debug("Started")
-            while True:
-                try:
-                    line: bytes = await self._usbl_stream_reader.readline()
-                    if not line:
-                        logging.warning("USBL closed connection")
-                        break
-                    elif len(line) == 0:
-                        continue
-                    line = line.strip()
-
-                    # Try to decode for logging
-                    try:
-                        decoded_line = line.decode(self._codec)
-                        logging.debug(f"From USBL: {decoded_line}")
-                    except UnicodeDecodeError:
-                        logging.debug(f"From USBL (binary): {line.hex()}")
-                        logging.warning(f"Received binary data that couldn't be decoded as UTF-8")
-                        continue
-
-                    if self.usbl_communication_ready_event.is_set():
-                        is_good_response, enu_coordinates, message = decode_usbl_response(
-                            line,
-                            UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT
-                        )
-                        
-                        if is_good_response:
-                            # If we received localization data (ENU coordinates)
-                            if enu_coordinates:
-                                east, north, up, uncertainty = enu_coordinates
-                                logging.info(f"Localization: E={east:.2f}, N={north:.2f}, U={up:.2f}, uncertainty={uncertainty:.2f}m")
-                                
-                                # TRANSCEIVER MODE: Send position data to serial
-                                if self._is_transceiver:
-                                    # Format position data as JSON for the serial device
-                                    import json
-                                    position_data = {
-                                        "type": "position",
-                                        "east": round(east, 4),
-                                        "north": round(north, 4),
-                                        "up": round(up, 4),
-                                        "uncertainty": round(uncertainty, 4)
-                                    }
-                                    position_msg = json.dumps(position_data).encode(self._codec)
-                                    await self.send_to_uart(position_msg)
-                                    logging.info(f"Sent position data to serial device: {position_data}")
-                            
-                            # If we received a message from remote device
-                            if message:
-                                # Forward message to UART
-                                await self.send_to_uart(message)
-                                logging.info(f"Forwarded message to serial: {message}")
-                                
-                                # TRANSCEIVER MODE: Auto-reply with position/orientation request
-                                if self._is_transceiver:
-                                    # Send acknowledgment back to transponder with orientation data
-                                    # Get orientation data from your sensors (IMU, compass, etc.)
-                                    # For now, we'll send a placeholder - you'll replace this with real sensor data
-                                    orientation_data = await self._get_orientation_data()
-                                    
-                                    response_msg = json.dumps(orientation_data)
-                                    encoded_response, has_priority = encode_usbl_command(
-                                        UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT,
-                                        target=self._localization_target_id,
-                                        payload=response_msg.encode(self._codec)
-                                    )
-                                    
-                                    if encoded_response:
-                                        await self.send_to_usbl(encoded_response)
-                                        logging.info(f"Auto-sent orientation response: {orientation_data}")
-                    else:
-                        is_good_response = decode_usbl_response(line, UsblCommand.FIRMWARE_INFORMATION)
-                        if is_good_response:
-                            self.usbl_communication_ready_event.set()
-                            logging.info("USBL is connected and ready to receive commands.")
-                            
-                except asyncio.CancelledError:
+    async def _usbl_reader(self):
+        """Reads data via TCP from USBL and pass it to serial."""
+        logging.debug("Started")
+        while True:
+            try:
+                line: bytes = await self._usbl_stream_reader.readline()
+                if not line:
+                    logging.warning("USBL closed connection")
                     break
-                except UnicodeDecodeError as e:
-                    logging.error(f"Unicode decode error: {e}")
+                elif len(line) == 0:
                     continue
-                except ConnectionResetError:
-                    logging.error("TCP connection was forcibly closed by the USBL.")
-                    break
-                except Exception as e:
-                    logging.critical(f"Error: {e}")
-                    break
-            logging.debug("Finished")
+                line = line.strip()
+
+                # Try to decode for logging
+                try:
+                    decoded_line = line.decode(self._codec)
+                    logging.debug(f"From USBL: {decoded_line}")
+                except UnicodeDecodeError:
+                    logging.debug(f"From USBL (binary): {line.hex()}")
+                    logging.warning(f"Received binary data that couldn't be decoded as UTF-8")
+                    continue
+
+                if self.usbl_communication_ready_event.is_set():
+                    is_good_response, enu_coordinates, message = decode_usbl_response(
+                        line,
+                        UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT
+                    )
+                    
+                    if is_good_response:
+                        # If we received localization data (ENU coordinates)
+                        if enu_coordinates:
+                            east, north, up, uncertainty = enu_coordinates
+                            logging.info(f"Localization: E={east:.2f}, N={north:.2f}, U={up:.2f}, uncertainty={uncertainty:.2f}m")
+                            
+                            # TRANSCEIVER MODE: Send position data to serial
+                            if self._is_transceiver:
+                                # Format position data as JSON for the serial device
+                                import json
+                                position_data = {
+                                    "type": "position",
+                                    "east": round(east, 4),
+                                    "north": round(north, 4),
+                                    "up": round(up, 4),
+                                    "uncertainty": round(uncertainty, 4)
+                                }
+                                position_msg = json.dumps(position_data).encode(self._codec)
+                                await self.send_to_uart(position_msg)
+                                logging.info(f"Sent position data to serial device: {position_data}")
+                        
+                        # If we received a message from remote device
+                        if message:
+                            # Forward message to UART
+                            await self.send_to_uart(message)
+                            logging.info(f"Forwarded message to serial: {message}")
+                            
+                            # TRANSCEIVER MODE: Auto-reply with position/orientation request
+                            if self._is_transceiver:
+                                # Send acknowledgment back to transponder with orientation data
+                                # Get orientation data from your sensors (IMU, compass, etc.)
+                                # For now, we'll send a placeholder - you'll replace this with real sensor data
+                                orientation_data = await self._get_orientation_data()
+                                
+                                response_msg = json.dumps(orientation_data)
+                                encoded_response, has_priority = encode_usbl_command(
+                                    UsblCommand.SEND_INSTANT_MESSAGE_WITH_ACKNOLEDGEMENT,
+                                    target=self._localization_target_id,
+                                    payload=response_msg.encode(self._codec)
+                                )
+                                
+                                if encoded_response:
+                                    await self.send_to_usbl(encoded_response)
+                                    logging.info(f"Auto-sent orientation response: {orientation_data}")
+                else:
+                    is_good_response = decode_usbl_response(line, UsblCommand.FIRMWARE_INFORMATION)
+                    if is_good_response:
+                        self.usbl_communication_ready_event.set()
+                        logging.info("USBL is connected and ready to receive commands.")
+                        
+            except asyncio.CancelledError:
+                break
+            except UnicodeDecodeError as e:
+                logging.error(f"Unicode decode error: {e}")
+                continue
+            except ConnectionResetError:
+                logging.error("TCP connection was forcibly closed by the USBL.")
+                break
+            except Exception as e:
+                logging.critical(f"Error: {e}")
+                break
+        logging.debug("Finished")
 
     async def _usbl_writer(self):
         """Waits for data on the queue and writes it to the USBL via TCP socket """

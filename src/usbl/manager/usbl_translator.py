@@ -25,7 +25,7 @@ def decode_usbl_response(decoded_message: bytes, initial_command: str) -> tuple[
     split_list: list[str] = str_decoded_message.split(":")
 
 
-    if "AT:" in str_decoded_message:
+    if "AT" in str_decoded_message:
         # Handle instant messages response
         # Command:
         # +++AT*SENDIM,p0,4,3,ack,test

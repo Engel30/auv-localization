@@ -88,7 +88,7 @@ async def main():
     
     try:
         # Configure serial port
-        port_name = '/dev/ttys044'  # For Windows use COM ports (listed in device manager)
+        port_name = '/dev/pts/7'  # For Windows use COM ports (listed in device manager)
         baud_rate = 115200
 
         print(f"Connecting to {port_name} at {baud_rate} bps...")

@@ -3,7 +3,7 @@
 # The things to change are in the USER CONFIGURATION section below
 
 CODEC = "utf-8"
-LOCAL_MACHINE_IP = "127.0.0.1"
+LOCAL_MACHINE_IP = "192.168.0.10"
 
 
 # --- USER CONFIGURATION ---
@@ -17,7 +17,7 @@ IS_TRANSCEIVER = False  # Change this based on which device you're configuring
 # Affects the speed of sound propagation in a given liquid, in order to estimate the device distance
 # Set to True if the liquid is salt water
 # Set to False if the liquid is not salt water, and modify according to liquid type
-SEA_WATER_CONFIG = False
+SEA_WATER_CONFIG = True
 
 # --- usbl configuration ---
 TRANSCEIVER_IP = "192.168.0.139"
@@ -31,7 +31,7 @@ TRANSCEIVER_ID = 2 # This can be assigned by manual configuration of the USBL de
 TRANSPONDER_ID = 3 # Same description as above
 
 # --- serial configuration ---
-SERIAL_PORT_ID = "/dev/ttys043" # In windows use COM
+SERIAL_PORT_ID = "/dev/pts/6" # In windows use COM
 SERIAL_BAUDRATE = 115200 # The receiver and transmitter devices MUST have the same value
 SERIAL_CONNECTION_TIMEOUT = 5
 
