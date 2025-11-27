@@ -1,4 +1,0 @@
-pyserial-asyncio~=0.6
-pynmea2~=1.19.0
-pymap3d~=3.2.0
-pyserial~=3.5
