@@ -1,0 +1,201 @@
+2025-12-01 16:17:03,508 | INFO | Logging to: logs/usbl_transponder_20251201_161703.log
+2025-12-01 16:17:03,508 | DEBUG | Using selector: EpollSelector
+2025-12-01 16:17:03,509 | INFO | [OK] Connected to USBL at 192.168.0.232:9200
+2025-12-01 16:17:03,509 | INFO | Transponder ID: 3 --> Transceiver ID: 2
+2025-12-01 16:17:03,509 | INFO | 
+2025-12-01 16:17:03,509 | INFO | ======================================================================
+2025-12-01 16:17:03,509 | INFO | TRANSPONDER STARTED - Event-Driven Position Request
+2025-12-01 16:17:03,509 | INFO | ======================================================================
+2025-12-01 16:17:03,509 | INFO | 
+2025-12-01 16:17:03,509 | INFO | Starting position request loop...
+2025-12-01 16:17:03,509 | INFO | Request interval: 5.0s after each position received
+2025-12-01 16:17:03,509 | INFO | 
+2025-12-01 16:17:04,510 | INFO | --> [16:17:04] Sending position request #1
+2025-12-01 16:17:05,088 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:05,707 | INFO | 
+2025-12-01 16:17:05,707 | INFO | ======================================================================
+2025-12-01 16:17:05,707 | INFO | POSITION RECEIVED #1
+2025-12-01 16:17:05,707 | INFO | ======================================================================
+2025-12-01 16:17:05,707 | INFO |   East:         0.01 m (east)
+2025-12-01 16:17:05,707 | INFO |   North:        0.82 m (north)
+2025-12-01 16:17:05,707 | INFO |   Up:          -0.01 m (below)
+2025-12-01 16:17:05,708 | INFO |   Distance:     0.82 m (3D)
+2025-12-01 16:17:05,708 | INFO |   RSSI:     -50 dBm | Integrity: 160
+2025-12-01 16:17:05,708 | INFO | ======================================================================
+2025-12-01 16:17:05,708 | INFO |   <-- Response received in time
+2025-12-01 16:17:05,708 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:05,708 | INFO | 
+2025-12-01 16:17:10,714 | INFO | --> [16:17:10] Sending position request #2
+2025-12-01 16:17:11,287 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:11,910 | INFO | 
+2025-12-01 16:17:11,910 | INFO | ======================================================================
+2025-12-01 16:17:11,910 | INFO | POSITION RECEIVED #2
+2025-12-01 16:17:11,910 | INFO | ======================================================================
+2025-12-01 16:17:11,911 | INFO |   East:         0.01 m (east)
+2025-12-01 16:17:11,911 | INFO |   North:        0.93 m (north)
+2025-12-01 16:17:11,911 | INFO |   Up:          -0.01 m (below)
+2025-12-01 16:17:11,911 | INFO |   Distance:     0.93 m (3D)
+2025-12-01 16:17:11,911 | INFO |   RSSI:     -49 dBm | Integrity: 166
+2025-12-01 16:17:11,911 | INFO | ======================================================================
+2025-12-01 16:17:11,911 | INFO |   <-- Response received in time
+2025-12-01 16:17:11,911 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:11,911 | INFO | 
+2025-12-01 16:17:16,917 | INFO | --> [16:17:16] Sending position request #3
+2025-12-01 16:17:17,492 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:18,115 | INFO | 
+2025-12-01 16:17:18,115 | INFO | ======================================================================
+2025-12-01 16:17:18,115 | INFO | POSITION RECEIVED #3
+2025-12-01 16:17:18,115 | INFO | ======================================================================
+2025-12-01 16:17:18,115 | INFO |   East:         0.03 m (east)
+2025-12-01 16:17:18,115 | INFO |   North:        1.33 m (north)
+2025-12-01 16:17:18,115 | INFO |   Up:          -0.02 m (below)
+2025-12-01 16:17:18,115 | INFO |   Distance:     1.33 m (3D)
+2025-12-01 16:17:18,115 | INFO |   RSSI:     -50 dBm | Integrity: 162
+2025-12-01 16:17:18,115 | INFO | ======================================================================
+2025-12-01 16:17:18,116 | INFO |   <-- Response received in time
+2025-12-01 16:17:18,116 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:18,116 | INFO | 
+2025-12-01 16:17:23,122 | INFO | --> [16:17:23] Sending position request #4
+2025-12-01 16:17:23,696 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:24,336 | INFO | 
+2025-12-01 16:17:24,336 | INFO | ======================================================================
+2025-12-01 16:17:24,336 | INFO | POSITION RECEIVED #4
+2025-12-01 16:17:24,336 | INFO | ======================================================================
+2025-12-01 16:17:24,336 | INFO |   East:         0.04 m (east)
+2025-12-01 16:17:24,336 | INFO |   North:       -1.56 m (south)
+2025-12-01 16:17:24,336 | INFO |   Up:          -0.01 m (below)
+2025-12-01 16:17:24,336 | INFO |   Distance:     1.56 m (3D)
+2025-12-01 16:17:24,336 | INFO |   RSSI:     -49 dBm | Integrity: 183
+2025-12-01 16:17:24,336 | INFO | ======================================================================
+2025-12-01 16:17:24,336 | INFO |   <-- Response received in time
+2025-12-01 16:17:24,336 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:24,337 | INFO | 
+2025-12-01 16:17:29,342 | INFO | --> [16:17:29] Sending position request #5
+2025-12-01 16:17:29,917 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:30,556 | INFO | 
+2025-12-01 16:17:30,556 | INFO | ======================================================================
+2025-12-01 16:17:30,556 | INFO | POSITION RECEIVED #5
+2025-12-01 16:17:30,556 | INFO | ======================================================================
+2025-12-01 16:17:30,556 | INFO |   East:         0.04 m (east)
+2025-12-01 16:17:30,556 | INFO |   North:       -1.56 m (south)
+2025-12-01 16:17:30,556 | INFO |   Up:          -0.01 m (below)
+2025-12-01 16:17:30,556 | INFO |   Distance:     1.56 m (3D)
+2025-12-01 16:17:30,556 | INFO |   RSSI:     -50 dBm | Integrity: 200
+2025-12-01 16:17:30,556 | INFO | ======================================================================
+2025-12-01 16:17:30,557 | INFO |   <-- Response received in time
+2025-12-01 16:17:30,557 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:30,557 | INFO | 
+2025-12-01 16:17:35,562 | INFO | --> [16:17:35] Sending position request #6
+2025-12-01 16:17:36,135 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:36,758 | INFO | 
+2025-12-01 16:17:36,758 | INFO | ======================================================================
+2025-12-01 16:17:36,758 | INFO | POSITION RECEIVED #6
+2025-12-01 16:17:36,758 | INFO | ======================================================================
+2025-12-01 16:17:36,758 | INFO |   East:         0.07 m (east)
+2025-12-01 16:17:36,758 | INFO |   North:        2.04 m (north)
+2025-12-01 16:17:36,758 | INFO |   Up:          -0.02 m (below)
+2025-12-01 16:17:36,758 | INFO |   Distance:     2.04 m (3D)
+2025-12-01 16:17:36,758 | INFO |   RSSI:     -49 dBm | Integrity: 215
+2025-12-01 16:17:36,759 | INFO | ======================================================================
+2025-12-01 16:17:36,759 | INFO |   <-- Response received in time
+2025-12-01 16:17:36,759 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:36,759 | INFO | 
+2025-12-01 16:17:41,760 | INFO | --> [16:17:41] Sending position request #7
+2025-12-01 16:17:42,334 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:42,957 | INFO | 
+2025-12-01 16:17:42,957 | INFO | ======================================================================
+2025-12-01 16:17:42,957 | INFO | POSITION RECEIVED #7
+2025-12-01 16:17:42,957 | INFO | ======================================================================
+2025-12-01 16:17:42,957 | INFO |   East:         0.07 m (east)
+2025-12-01 16:17:42,957 | INFO |   North:        2.14 m (north)
+2025-12-01 16:17:42,958 | INFO |   Up:          -0.03 m (below)
+2025-12-01 16:17:42,958 | INFO |   Distance:     2.14 m (3D)
+2025-12-01 16:17:42,958 | INFO |   RSSI:     -49 dBm | Integrity: 194
+2025-12-01 16:17:42,958 | INFO | ======================================================================
+2025-12-01 16:17:42,958 | INFO |   <-- Response received in time
+2025-12-01 16:17:42,958 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:42,958 | INFO | 
+2025-12-01 16:17:47,964 | INFO | --> [16:17:47] Sending position request #8
+2025-12-01 16:17:48,537 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:49,160 | INFO | 
+2025-12-01 16:17:49,160 | INFO | ======================================================================
+2025-12-01 16:17:49,160 | INFO | POSITION RECEIVED #8
+2025-12-01 16:17:49,160 | INFO | ======================================================================
+2025-12-01 16:17:49,160 | INFO |   East:         0.09 m (east)
+2025-12-01 16:17:49,160 | INFO |   North:        2.38 m (north)
+2025-12-01 16:17:49,160 | INFO |   Up:          -0.03 m (below)
+2025-12-01 16:17:49,160 | INFO |   Distance:     2.38 m (3D)
+2025-12-01 16:17:49,160 | INFO |   RSSI:     -50 dBm | Integrity: 229
+2025-12-01 16:17:49,160 | INFO | ======================================================================
+2025-12-01 16:17:49,160 | INFO |   <-- Response received in time
+2025-12-01 16:17:49,160 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:49,160 | INFO | 
+2025-12-01 16:17:54,166 | INFO | --> [16:17:54] Sending position request #9
+2025-12-01 16:17:54,739 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:17:55,354 | INFO | 
+2025-12-01 16:17:55,355 | INFO | ======================================================================
+2025-12-01 16:17:55,357 | INFO | POSITION RECEIVED #9
+2025-12-01 16:17:55,358 | INFO | ======================================================================
+2025-12-01 16:17:55,358 | INFO |   East:         0.10 m (east)
+2025-12-01 16:17:55,358 | INFO |   North:        2.45 m (north)
+2025-12-01 16:17:55,358 | INFO |   Up:          -0.03 m (below)
+2025-12-01 16:17:55,358 | INFO |   Distance:     2.45 m (3D)
+2025-12-01 16:17:55,358 | INFO |   RSSI:     -49 dBm | Integrity: 217
+2025-12-01 16:17:55,358 | INFO | ======================================================================
+2025-12-01 16:17:55,358 | INFO |   <-- Response received in time
+2025-12-01 16:17:55,358 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:17:55,358 | INFO | 
+2025-12-01 16:18:00,364 | INFO | --> [16:18:00] Sending position request #10
+2025-12-01 16:18:00,956 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:18:01,569 | INFO | 
+2025-12-01 16:18:01,569 | INFO | ======================================================================
+2025-12-01 16:18:01,569 | INFO | POSITION RECEIVED #10
+2025-12-01 16:18:01,569 | INFO | ======================================================================
+2025-12-01 16:18:01,570 | INFO |   East:         0.10 m (east)
+2025-12-01 16:18:01,570 | INFO |   North:        2.49 m (north)
+2025-12-01 16:18:01,570 | INFO |   Up:          -0.03 m (below)
+2025-12-01 16:18:01,570 | INFO |   Distance:     2.49 m (3D)
+2025-12-01 16:18:01,570 | INFO |   RSSI:     -44 dBm | Integrity: 249
+2025-12-01 16:18:01,570 | INFO | ======================================================================
+2025-12-01 16:18:01,570 | INFO |   <-- Response received in time
+2025-12-01 16:18:01,570 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:18:01,570 | INFO | 
+2025-12-01 16:18:06,576 | INFO | --> [16:18:06] Sending position request #11
+2025-12-01 16:18:07,167 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:18:07,795 | INFO | 
+2025-12-01 16:18:07,795 | INFO | ======================================================================
+2025-12-01 16:18:07,795 | INFO | POSITION RECEIVED #11
+2025-12-01 16:18:07,795 | INFO | ======================================================================
+2025-12-01 16:18:07,795 | INFO |   East:         0.14 m (east)
+2025-12-01 16:18:07,795 | INFO |   North:       -2.49 m (south)
+2025-12-01 16:18:07,795 | INFO |   Up:           0.03 m (above)
+2025-12-01 16:18:07,795 | INFO |   Distance:     2.49 m (3D)
+2025-12-01 16:18:07,795 | INFO |   RSSI:     -50 dBm | Integrity: 141
+2025-12-01 16:18:07,795 | INFO | ======================================================================
+2025-12-01 16:18:07,795 | INFO |   <-- Response received in time
+2025-12-01 16:18:07,795 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:18:07,795 | INFO | 
+2025-12-01 16:18:12,801 | INFO | --> [16:18:12] Sending position request #12
+2025-12-01 16:18:14,770 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 16:18:14,771 | INFO |   <-- Response received in time
+2025-12-01 16:18:14,771 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:18:14,771 | INFO | 
+2025-12-01 16:18:19,776 | INFO | --> [16:18:19] Sending position request #13
+2025-12-01 16:18:20,367 | INFO |   [OK] Position request delivered to transceiver
+2025-12-01 16:18:21,007 | INFO | 
+2025-12-01 16:18:21,007 | INFO | ======================================================================
+2025-12-01 16:18:21,007 | INFO | POSITION RECEIVED #12
+2025-12-01 16:18:21,007 | INFO | ======================================================================
+2025-12-01 16:18:21,007 | INFO |   East:        -0.11 m (west)
+2025-12-01 16:18:21,007 | INFO |   North:       -2.79 m (south)
+2025-12-01 16:18:21,007 | INFO |   Up:           0.04 m (above)
+2025-12-01 16:18:21,007 | INFO |   Distance:     2.79 m (3D)
+2025-12-01 16:18:21,007 | INFO |   RSSI:     -44 dBm | Integrity: 244
+2025-12-01 16:18:21,007 | INFO | ======================================================================
+2025-12-01 16:18:21,007 | INFO |   <-- Response received in time
+2025-12-01 16:18:21,008 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 16:18:21,008 | INFO | 
+2025-12-01 16:18:23,596 | ERROR | Task was destroyed but it is pending!
+task: <Task pending coro=<response_reader() done, defined at /home/federico/LABMACS/2025_Jetson_HL_Nav-Guidance/src/test/usbl/transponder/usbl_transponder_test_tx2_logs.py:146> wait_for=<Future cancelled> cb=[gather.<locals>._done_callback(0)() at /home/federico/miniconda3/envs/jetson-TX2-env/lib/python3.6/asyncio/tasks.py:622]>
+2025-12-01 16:18:23,596 | ERROR | Task was destroyed but it is pending!
+task: <Task pending coro=<position_requester() done, defined at /home/federico/LABMACS/2025_Jetson_HL_Nav-Guidance/src/test/usbl/transponder/usbl_transponder_test_tx2_logs.py:208> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x72509df36a68>()]> cb=[gather.<locals>._done_callback(1)() at /home/federico/miniconda3/envs/jetson-TX2-env/lib/python3.6/asyncio/tasks.py:622]>

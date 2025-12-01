@@ -1,0 +1,27 @@
+2025-12-01 15:51:51,731 | INFO | Logging to: logs/usbl_transponder_20251201_155151.log
+2025-12-01 15:51:51,731 | DEBUG | Using selector: EpollSelector
+2025-12-01 15:51:51,732 | INFO | [OK] Connected to USBL at 192.168.0.232:9200
+2025-12-01 15:51:51,732 | INFO | Transponder ID: 3 --> Transceiver ID: 2
+2025-12-01 15:51:51,732 | INFO | 
+2025-12-01 15:51:51,732 | INFO | ======================================================================
+2025-12-01 15:51:51,732 | INFO | TRANSPONDER STARTED - Event-Driven Position Request
+2025-12-01 15:51:51,732 | INFO | ======================================================================
+2025-12-01 15:51:51,732 | INFO | 
+2025-12-01 15:51:51,732 | INFO | Starting position request loop...
+2025-12-01 15:51:51,732 | INFO | Request interval: 5.0s after each position received
+2025-12-01 15:51:51,732 | INFO | 
+2025-12-01 15:51:51,733 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:52,734 | INFO | --> [15:51:52] Sending position request #1
+2025-12-01 15:51:55,377 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:55,377 | INFO |   <-- Response received in time
+2025-12-01 15:51:55,377 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 15:51:55,378 | INFO | 
+2025-12-01 15:52:00,383 | INFO | --> [15:52:00] Sending position request #2
+2025-12-01 15:52:03,027 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:52:03,028 | INFO |   <-- Response received in time
+2025-12-01 15:52:03,028 | INFO |   ... Waiting 5.0s before next request...
+2025-12-01 15:52:03,028 | INFO | 
+2025-12-01 15:52:05,011 | ERROR | Task was destroyed but it is pending!
+task: <Task pending coro=<response_reader() done, defined at /home/federico/LABMACS/2025_Jetson_HL_Nav-Guidance/src/test/usbl/transponder/usbl_transponder_test_tx2_logs.py:146> wait_for=<Future cancelled> cb=[gather.<locals>._done_callback(0)() at /home/federico/miniconda3/envs/jetson-TX2-env/lib/python3.6/asyncio/tasks.py:622]>
+2025-12-01 15:52:05,012 | ERROR | Task was destroyed but it is pending!
+task: <Task pending coro=<position_requester() done, defined at /home/federico/LABMACS/2025_Jetson_HL_Nav-Guidance/src/test/usbl/transponder/usbl_transponder_test_tx2_logs.py:208> wait_for=<Future pending cb=[<TaskWakeupMethWrapper object at 0x7d545dea2a68>()]> cb=[gather.<locals>._done_callback(1)() at /home/federico/miniconda3/envs/jetson-TX2-env/lib/python3.6/asyncio/tasks.py:622]>

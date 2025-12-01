@@ -1,0 +1,128 @@
+2025-12-01 15:49:56,648 | INFO | Logging to: logs/usbl_transponder_20251201_154956.log
+2025-12-01 15:49:56,648 | DEBUG | Using selector: EpollSelector
+2025-12-01 15:49:56,649 | INFO | [OK] Connected to USBL at 192.168.0.232:9200
+2025-12-01 15:49:56,649 | INFO | Transponder ID: 3 --> Transceiver ID: 2
+2025-12-01 15:49:56,649 | INFO | 
+2025-12-01 15:49:56,649 | INFO | ======================================================================
+2025-12-01 15:49:56,649 | INFO | TRANSPONDER STARTED - Event-Driven Position Request
+2025-12-01 15:49:56,649 | INFO | ======================================================================
+2025-12-01 15:49:56,649 | INFO | 
+2025-12-01 15:49:56,649 | INFO | Starting position request loop...
+2025-12-01 15:49:56,650 | INFO | Request interval: 2.0s after each position received
+2025-12-01 15:49:56,650 | INFO | 
+2025-12-01 15:49:57,651 | INFO | --> [15:49:57] Sending position request #1
+2025-12-01 15:50:00,294 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:00,294 | INFO |   <-- Response received in time
+2025-12-01 15:50:00,294 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:00,294 | INFO | 
+2025-12-01 15:50:02,297 | INFO | --> [15:50:02] Sending position request #2
+2025-12-01 15:50:04,940 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:04,940 | INFO |   <-- Response received in time
+2025-12-01 15:50:04,940 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:04,940 | INFO | 
+2025-12-01 15:50:06,942 | INFO | --> [15:50:06] Sending position request #3
+2025-12-01 15:50:09,585 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:09,585 | INFO |   <-- Response received in time
+2025-12-01 15:50:09,585 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:09,585 | INFO | 
+2025-12-01 15:50:11,588 | INFO | --> [15:50:11] Sending position request #4
+2025-12-01 15:50:14,231 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:14,231 | INFO |   <-- Response received in time
+2025-12-01 15:50:14,232 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:14,232 | INFO | 
+2025-12-01 15:50:16,234 | INFO | --> [15:50:16] Sending position request #5
+2025-12-01 15:50:18,878 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:18,878 | INFO |   <-- Response received in time
+2025-12-01 15:50:18,878 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:18,878 | INFO | 
+2025-12-01 15:50:20,881 | INFO | --> [15:50:20] Sending position request #6
+2025-12-01 15:50:23,525 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:23,525 | INFO |   <-- Response received in time
+2025-12-01 15:50:23,525 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:23,525 | INFO | 
+2025-12-01 15:50:25,528 | INFO | --> [15:50:25] Sending position request #7
+2025-12-01 15:50:28,171 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:28,171 | INFO |   <-- Response received in time
+2025-12-01 15:50:28,171 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:28,171 | INFO | 
+2025-12-01 15:50:30,174 | INFO | --> [15:50:30] Sending position request #8
+2025-12-01 15:50:32,817 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:32,817 | INFO |   <-- Response received in time
+2025-12-01 15:50:32,817 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:32,817 | INFO | 
+2025-12-01 15:50:34,820 | INFO | --> [15:50:34] Sending position request #9
+2025-12-01 15:50:37,463 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:37,463 | INFO |   <-- Response received in time
+2025-12-01 15:50:37,463 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:37,463 | INFO | 
+2025-12-01 15:50:39,466 | INFO | --> [15:50:39] Sending position request #10
+2025-12-01 15:50:42,110 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:42,111 | INFO |   <-- Response received in time
+2025-12-01 15:50:42,111 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:42,111 | INFO | 
+2025-12-01 15:50:44,114 | INFO | --> [15:50:44] Sending position request #11
+2025-12-01 15:50:46,758 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:46,758 | INFO |   <-- Response received in time
+2025-12-01 15:50:46,759 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:46,759 | INFO | 
+2025-12-01 15:50:48,761 | INFO | --> [15:50:48] Sending position request #12
+2025-12-01 15:50:51,405 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:51,405 | INFO |   <-- Response received in time
+2025-12-01 15:50:51,405 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:51,405 | INFO | 
+2025-12-01 15:50:53,408 | INFO | --> [15:50:53] Sending position request #13
+2025-12-01 15:50:56,050 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:50:56,051 | INFO |   <-- Response received in time
+2025-12-01 15:50:56,051 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:50:56,051 | INFO | 
+2025-12-01 15:50:58,053 | INFO | --> [15:50:58] Sending position request #14
+2025-12-01 15:51:00,695 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:00,695 | INFO |   <-- Response received in time
+2025-12-01 15:51:00,695 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:00,695 | INFO | 
+2025-12-01 15:51:02,697 | INFO | --> [15:51:02] Sending position request #15
+2025-12-01 15:51:05,341 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:05,341 | INFO |   <-- Response received in time
+2025-12-01 15:51:05,341 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:05,341 | INFO | 
+2025-12-01 15:51:07,344 | INFO | --> [15:51:07] Sending position request #16
+2025-12-01 15:51:09,986 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:09,987 | INFO |   <-- Response received in time
+2025-12-01 15:51:09,987 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:09,987 | INFO | 
+2025-12-01 15:51:11,989 | INFO | --> [15:51:11] Sending position request #17
+2025-12-01 15:51:14,632 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:14,633 | INFO |   <-- Response received in time
+2025-12-01 15:51:14,633 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:14,633 | INFO | 
+2025-12-01 15:51:16,635 | INFO | --> [15:51:16] Sending position request #18
+2025-12-01 15:51:19,279 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:19,280 | INFO |   <-- Response received in time
+2025-12-01 15:51:19,280 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:19,280 | INFO | 
+2025-12-01 15:51:21,282 | INFO | --> [15:51:21] Sending position request #19
+2025-12-01 15:51:23,925 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:23,926 | INFO |   <-- Response received in time
+2025-12-01 15:51:23,926 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:23,926 | INFO | 
+2025-12-01 15:51:25,928 | INFO | --> [15:51:25] Sending position request #20
+2025-12-01 15:51:28,571 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:28,571 | INFO |   <-- Response received in time
+2025-12-01 15:51:28,571 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:28,571 | INFO | 
+2025-12-01 15:51:30,574 | INFO | --> [15:51:30] Sending position request #21
+2025-12-01 15:51:33,217 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:33,217 | INFO |   <-- Response received in time
+2025-12-01 15:51:33,217 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:33,217 | INFO | 
+2025-12-01 15:51:35,220 | INFO | --> [15:51:35] Sending position request #22
+2025-12-01 15:51:37,864 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:37,864 | INFO |   <-- Response received in time
+2025-12-01 15:51:37,864 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:37,864 | INFO | 
+2025-12-01 15:51:39,866 | INFO | --> [15:51:39] Sending position request #23
+2025-12-01 15:51:42,509 | ERROR |   [FAIL] Position request FAILED - will retry
+2025-12-01 15:51:42,509 | INFO |   <-- Response received in time
+2025-12-01 15:51:42,509 | INFO |   ... Waiting 2.0s before next request...
+2025-12-01 15:51:42,509 | INFO | 
+2025-12-01 15:51:44,511 | INFO | --> [15:51:44] Sending position request #24

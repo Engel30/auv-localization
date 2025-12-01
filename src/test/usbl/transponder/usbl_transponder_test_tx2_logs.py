@@ -16,7 +16,7 @@ SPEED_OF_SOUND_MPS = 1500.0
 MIN_INTEGRITY = 50
 
 # REQUEST FREQUENCY - Time to wait after receiving position before next request
-REQUEST_INTERVAL = 2.0  # seconds
+REQUEST_INTERVAL = 5.0  # seconds
 
 # LOGGING
 LOG_DIR = "logs"

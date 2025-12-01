@@ -47,7 +47,7 @@ except ImportError:
 # ==================== CONFIG ====================
 CONTROL_LOOP_MS = 50
 ENABLE_PLOTTING = False and MATPLOTLIB_AVAILABLE
-ENABLE_LOGGING = False  # Flag per abilitare il logging
+ENABLE_LOGGING = True  # Flag per abilitare il logging
 ENABLE_UDP_STREAM = True  # Flag per streammare dati via UDP
 UDP_HOST = '127.0.0.1'
 UDP_PORT = 5555
@@ -76,7 +76,7 @@ SIGMA_YAW = np.deg2rad(1.0)
 
 PLOT_HISTORY = 150
 
-LOG_DIR = "log"
+LOG_DIR = "log_transponder"
 
 # ==================== GLOBALS ====================
 sensor_data = {
