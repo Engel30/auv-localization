@@ -74,7 +74,6 @@ SIGMA_POS = 0.15
 SIGMA_DEPTH = 0.05
 SIGMA_YAW = np.deg2rad(1.0)
 
-USBL_FIX_EVERY = 5
 PLOT_HISTORY = 150
 
 LOG_DIR = "log"
@@ -82,7 +81,15 @@ LOG_DIR = "log"
 # ==================== GLOBALS ====================
 sensor_data = {
     'imu': {'euler': [0.0, 0.0, 0.0], 'acc_body': [0.0, 0.0, 0.0], 'valid': False},
-    'usbl': {'pos_world': [0.0, 0.0, 0.0], 'valid': False, 'distance': 0.0, 'rssi': None, 'integrity': None},
+    'usbl': {
+        'pos_world': [0.0, 0.0, 0.0], 
+        'valid': False, 
+        'distance': 0.0, 
+        'rssi': None, 
+        'integrity': None,
+        'new_data': False,  # NEW: Flag to indicate new USBL measurement
+        'timestamp': 0.0    # NEW: Timestamp of last USBL update
+    },
     'depth': {'depth': 0.0, 'valid': False}
 }
 data_lock = threading.Lock()
@@ -121,6 +128,7 @@ udp_packet_count = 0
 
 # USBL globals
 usbl_transponder = None
+last_usbl_request_time = 0.0  # NEW: Track last USBL request time
 
 # ==================== HELPER FUNCTIONS ====================
 def compute_tilted_circle_position(theta, radius, tilt_angle, z_center=-5.0):
@@ -344,8 +352,9 @@ def imu_simulation_thread():
             time.sleep(0.005)
 
 def usbl_thread():
-    """USBL: usa transponder reale se disponibile (USE_REAL_SENSORS=True), altrimenti simulazione."""
-    global running, usbl_transponder
+    """USBL: usa transponder reale se disponibile (USE_REAL_SENSORS=True), altrimenti simulazione.
+    EVENT-DRIVEN: Updates only when a new USBL request is successful."""
+    global running, usbl_transponder, last_usbl_request_time
     
     use_simulation = not USE_REAL_SENSORS
     
@@ -380,46 +389,70 @@ def usbl_thread():
         print("[USBL] USE_REAL_SENSORS=False, using simulation")
         use_simulation = True
     
-    # Main loop
+    # Main loop - EVENT DRIVEN
+    last_request_time = time.time()
+    
     while running:
+        current_time = time.time()
+        
         if not use_simulation and usbl_transponder is not None:
             # Read from real USBL
             try:
-                pos_data = usbl_transponder.get_position()
-                
-                # Check if still connected
-                if not usbl_transponder.is_connected():
-                    print("[USBL] Connection lost, switching to simulation")
-                    use_simulation = True
-                    continue
-                
-                with data_lock:
-                    sensor_data['usbl']['valid'] = pos_data['valid']
-                    sensor_data['usbl']['pos_world'] = pos_data['pos_world']
-                    sensor_data['usbl']['distance'] = pos_data.get('distance', 0.0)
-                    sensor_data['usbl']['rssi'] = pos_data.get('rssi')
-                    sensor_data['usbl']['integrity'] = pos_data.get('integrity')
+                # Check if it's time for a new request
+                if (current_time - last_request_time) >= USBL_REQUEST_INTERVAL:
+                    last_request_time = current_time
+                    
+                    # Request position
+                    pos_data = usbl_transponder.get_position()
+                    
+                    # Check if still connected
+                    if not usbl_transponder.is_connected():
+                        print("[USBL] Connection lost, switching to simulation")
+                        use_simulation = True
+                        continue
+                    
+                    # Update sensor data with new measurement
+                    with data_lock:
+                        if pos_data['valid']:
+                            # New valid USBL data received
+                            sensor_data['usbl']['pos_world'] = pos_data['pos_world']
+                            sensor_data['usbl']['valid'] = True
+                            sensor_data['usbl']['distance'] = pos_data.get('distance', 0.0)
+                            sensor_data['usbl']['rssi'] = pos_data.get('rssi')
+                            sensor_data['usbl']['integrity'] = pos_data.get('integrity')
+                            sensor_data['usbl']['new_data'] = True  # Mark as new data
+                            sensor_data['usbl']['timestamp'] = current_time
+                        else:
+                            # Request failed, keep last valid data but mark as no new data
+                            sensor_data['usbl']['new_data'] = False
+                            # sensor_data['usbl']['valid'] remains from last successful request
                 
                 time.sleep(0.05)
             except Exception as e:
                 print("[USBL] Error reading USBL: {}".format(e))
+                with data_lock:
+                    sensor_data['usbl']['new_data'] = False
                 time.sleep(0.1)
         else:
-            # Simulation mode
-            with sim_lock:
-                t = sim_time['t']
-            
-            theta = OMEGA * t
-            
-            p_true = compute_tilted_circle_position(theta, RADIUS, TILT_ANGLE)
-            
-            p_meas = p_true + np.random.normal(0.0, SIGMA_POS, size=(3,1))
-            with data_lock:
-                sensor_data['usbl']['pos_world'] = [p_meas[0,0], p_meas[1,0], p_meas[2,0]]
-                sensor_data['usbl']['valid'] = True
-                sensor_data['usbl']['distance'] = 0.0
-                sensor_data['usbl']['rssi'] = None
-                sensor_data['usbl']['integrity'] = None
+            # Simulation mode - REQUEST at fixed interval
+            if (current_time - last_request_time) >= USBL_REQUEST_INTERVAL:
+                last_request_time = current_time
+                
+                with sim_lock:
+                    t = sim_time['t']
+                
+                theta = OMEGA * t
+                p_true = compute_tilted_circle_position(theta, RADIUS, TILT_ANGLE)
+                p_meas = p_true + np.random.normal(0.0, SIGMA_POS, size=(3,1))
+                
+                with data_lock:
+                    sensor_data['usbl']['pos_world'] = [p_meas[0,0], p_meas[1,0], p_meas[2,0]]
+                    sensor_data['usbl']['valid'] = True
+                    sensor_data['usbl']['distance'] = 0.0
+                    sensor_data['usbl']['rssi'] = None
+                    sensor_data['usbl']['integrity'] = None
+                    sensor_data['usbl']['new_data'] = True  # Mark as new data
+                    sensor_data['usbl']['timestamp'] = current_time
             
             time.sleep(0.01)
 
@@ -504,60 +537,64 @@ def plot_thread():
     ax2.grid(True)
     ax2.axis('equal')
     
-    # Error
+    # Error plot
     ax3 = fig.add_subplot(2, 3, 3)
     ax3.set_xlabel('Time [s]')
-    ax3.set_ylabel('Error [m]')
-    ax3.set_title('Position Error')
+    ax3.set_ylabel('Position Error [m]')
+    ax3.set_title('Estimation Error')
     ax3.grid(True)
     
-    # Position components
+    # Position components over time
     ax4 = fig.add_subplot(2, 3, 4)
     ax4.set_xlabel('Time [s]')
     ax4.set_ylabel('Position [m]')
     ax4.set_title('Position Components')
     ax4.grid(True)
     
-    # Depth comparison
+    # Depth plot
     ax5 = fig.add_subplot(2, 3, 5)
     ax5.set_xlabel('Time [s]')
     ax5.set_ylabel('Depth [m]')
-    ax5.set_title('Depth Comparison')
+    ax5.set_title('Depth Tracking')
     ax5.grid(True)
     ax5.invert_yaxis()
     
-    # Empty subplot for balance
+    # Velocity components
     ax6 = fig.add_subplot(2, 3, 6)
-    ax6.axis('off')
+    ax6.set_xlabel('Time [s]')
+    ax6.set_ylabel('Velocity [m/s]')
+    ax6.set_title('Velocity Components')
+    ax6.grid(True)
     
-    # Initialize line objects
-    line_true_3d, = ax1.plot([], [], [], 'g-', linewidth=2, label='True')
-    line_est_3d, = ax1.plot([], [], [], 'b-', linewidth=2, label='Estimated')
-    scatter_meas_3d = ax1.scatter([], [], [], c='r', marker='x', s=50, label='USBL')
+    # Initialize plot elements
+    line_true_3d, = ax1.plot([], [], [], 'b-', label='True', linewidth=1.5)
+    line_est_3d, = ax1.plot([], [], [], 'r-', label='Estimated', linewidth=1.5)
+    scatter_meas_3d = ax1.scatter([], [], [], c='g', marker='o', s=30, label='USBL Meas')
     
+    line_true_2d, = ax2.plot([], [], 'b-', label='True', linewidth=1.5)
+    line_est_2d, = ax2.plot([], [], 'r-', label='Estimated', linewidth=1.5)
+    scatter_meas_2d = ax2.scatter([], [], c='g', marker='o', s=30, label='USBL Meas')
+    
+    line_error, = ax3.plot([], [], 'r-', linewidth=1.5)
+    
+    line_x, = ax4.plot([], [], 'r-', label='X', linewidth=1.5)
+    line_y, = ax4.plot([], [], 'g-', label='Y', linewidth=1.5)
+    line_z, = ax4.plot([], [], 'b-', label='Z', linewidth=1.5)
+    
+    line_true_depth, = ax5.plot([], [], 'b-', label='True', linewidth=1.5)
+    line_est_depth, = ax5.plot([], [], 'r-', label='Estimated', linewidth=1.5)
+    line_meas_depth, = ax5.plot([], [], 'go', label='Measured', markersize=3)
+    
+    for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
+        ax.legend(loc='upper right')
+    
+    # Show full ground truth trajectory if enabled
     if SHOW_FULL_GROUND_TRUTH:
-        circle_points = generate_full_circle(RADIUS, TILT_ANGLE)
-        ax1.plot(circle_points[:,0], circle_points[:,1], circle_points[:,2], 
-                'g--', alpha=0.3, linewidth=1, label='Full GT')
-    
-    ax1.legend()
-    
-    line_true_xy, = ax2.plot([], [], 'g-', linewidth=2, label='True')
-    line_est_xy, = ax2.plot([], [], 'b-', linewidth=2, label='Estimated')
-    scatter_meas_xy = ax2.scatter([], [], c='r', marker='x', s=50, label='USBL')
-    ax2.legend()
-    
-    line_err, = ax3.plot([], [], 'r-', linewidth=2)
-    
-    line_x, = ax4.plot([], [], 'r-', linewidth=1.5, label='X')
-    line_y, = ax4.plot([], [], 'g-', linewidth=1.5, label='Y')
-    line_z, = ax4.plot([], [], 'b-', linewidth=1.5, label='Z')
-    ax4.legend()
-    
-    line_true_depth, = ax5.plot([], [], 'g-', linewidth=2, label='True')
-    line_est_depth, = ax5.plot([], [], 'b-', linewidth=2, label='Estimated')
-    line_meas_depth, = ax5.plot([], [], 'r.', markersize=3, label='Measured')
-    ax5.legend()
+        full_circle = generate_full_circle(RADIUS, TILT_ANGLE)
+        ax1.plot(full_circle[:,0], full_circle[:,1], full_circle[:,2], 
+                'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
+        ax2.plot(full_circle[:,0], full_circle[:,1], 
+                'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
     
     plt.tight_layout()
     plt.ion()
@@ -571,57 +608,46 @@ def plot_thread():
                     continue
                 
                 ts = list(plot_data['time'])
-                true_pos = list(plot_data['true_pos'])
-                est_pos = list(plot_data['est_pos'])
-                meas_pos = plot_data['meas_pos'][:]
+                true_arr = np.array([p for p in plot_data['true_pos']])
+                est_arr = np.array([p for p in plot_data['est_pos']])
                 errors = list(plot_data['error'])
                 true_depth = list(plot_data['true_depth'])
                 est_depth = list(plot_data['est_depth'])
                 meas_depth = list(plot_data['meas_depth'])
+                meas_pos = plot_data['meas_pos'][:]
             
-            true_arr = np.array(true_pos)
-            est_arr = np.array(est_pos)
-            
-            # 3D trajectory
+            # Update 3D trajectory
             line_true_3d.set_data(true_arr[:,0], true_arr[:,1])
             line_true_3d.set_3d_properties(true_arr[:,2])
             line_est_3d.set_data(est_arr[:,0], est_arr[:,1])
             line_est_3d.set_3d_properties(est_arr[:,2])
             
-            if len(meas_pos) > 0:
-                meas_arr = np.array([p for _, p in meas_pos])
+            if meas_pos:
+                meas_arr = np.array([p for t, p in meas_pos])
                 scatter_meas_3d._offsets3d = (meas_arr[:,0], meas_arr[:,1], meas_arr[:,2])
             
-            all_points = np.vstack([true_arr, est_arr])
-            x_margin = (all_points[:,0].max() - all_points[:,0].min()) * 0.1 + 1
-            y_margin = (all_points[:,1].max() - all_points[:,1].min()) * 0.1 + 1
-            z_margin = (all_points[:,2].max() - all_points[:,2].min()) * 0.1 + 1
-            ax1.set_xlim(all_points[:,0].min() - x_margin, all_points[:,0].max() + x_margin)
-            ax1.set_ylim(all_points[:,1].min() - y_margin, all_points[:,1].max() + y_margin)
-            ax1.set_zlim(all_points[:,2].min() - z_margin, all_points[:,2].max() + z_margin)
+            all_data = np.concatenate([true_arr, est_arr])
+            margin = (all_data.max() - all_data.min()) * 0.1 + 1.0
+            ax1.set_xlim(all_data[:,0].min() - margin, all_data[:,0].max() + margin)
+            ax1.set_ylim(all_data[:,1].min() - margin, all_data[:,1].max() + margin)
+            ax1.set_zlim(all_data[:,2].min() - margin, all_data[:,2].max() + margin)
             
-            # 2D trajectory
-            line_true_xy.set_data(true_arr[:,0], true_arr[:,1])
-            line_est_xy.set_data(est_arr[:,0], est_arr[:,1])
+            # Update 2D trajectory
+            line_true_2d.set_data(true_arr[:,0], true_arr[:,1])
+            line_est_2d.set_data(est_arr[:,0], est_arr[:,1])
             
-            if len(meas_pos) > 0:
-                scatter_meas_xy.set_offsets(meas_arr[:,:2])
+            if meas_pos:
+                meas_arr = np.array([p for t, p in meas_pos])
+                scatter_meas_2d.set_offsets(meas_arr[:,:2])
             
-            all_x = np.concatenate([true_arr[:,0], est_arr[:,0]])
-            all_y = np.concatenate([true_arr[:,1], est_arr[:,1]])
-            x_margin = (all_x.max() - all_x.min()) * 0.1 + 1
-            y_margin = (all_y.max() - all_y.min()) * 0.1 + 1
-            ax2.set_xlim(all_x.min() - x_margin, all_x.max() + x_margin)
-            ax2.set_ylim(all_y.min() - y_margin, all_y.max() + y_margin)
+            xy_margin = (all_data[:,:2].max() - all_data[:,:2].min()) * 0.1 + 1.0
+            ax2.set_xlim(all_data[:,0].min() - xy_margin, all_data[:,0].max() + xy_margin)
+            ax2.set_ylim(all_data[:,1].min() - xy_margin, all_data[:,1].max() + xy_margin)
             
-            # Error
-            line_err.set_data(ts, errors)
-            # niente .clear() per compatibilità
-            ax3.collections[:] = []
-            ax3.fill_between(ts, errors, 0, alpha=0.2, color='red')
-            if len(errors) > 0:
-                error_max = max(errors)
-                ax3.set_ylim(0, error_max * 1.15)
+            # Update error
+            line_error.set_data(ts, errors)
+            error_margin = max(errors) * 0.15 + 0.1
+            ax3.set_ylim(0, max(errors) + error_margin)
             ax3.set_xlim(min(ts), max(ts))
             
             # Position components
@@ -660,9 +686,10 @@ def main():
     global running
     
     print("=" * 80)
-    print("KALMAN FILTER SENSOR FUSION - KF_profond.py with USBL Integration")
+    print("KALMAN FILTER SENSOR FUSION - EVENT-DRIVEN USBL")
     print("Control Loop: {}ms".format(CONTROL_LOOP_MS))
     print("Trajectory: Tilted Circle ({:.0f}°)".format(np.rad2deg(TILT_ANGLE)))
+    print("USBL Request Interval: {:.1f}s".format(USBL_REQUEST_INTERVAL))
     print("Full Ground Truth: {}".format('ENABLED' if SHOW_FULL_GROUND_TRUTH else 'DISABLED'))
     print("Plotting: {}".format('ENABLED' if ENABLE_PLOTTING else 'DISABLED'))
     print("Sensors: {}".format('REAL+SIM' if USE_REAL_SENSORS else 'SIM ONLY'))
@@ -734,8 +761,13 @@ def main():
                 imu = sensor_data['imu'].copy()
                 usbl = sensor_data['usbl'].copy()
                 depth = sensor_data['depth'].copy()
-            
-            usbl_fix_available = (iteration % USBL_FIX_EVERY == 0)
+                
+                # EVENT-DRIVEN: Check if new USBL data is available
+                usbl_new_data = usbl['new_data']
+                
+                # Reset the new_data flag after reading it
+                if usbl_new_data:
+                    sensor_data['usbl']['new_data'] = False
             
             theta = OMEGA * t_sim
             p_true_vec = compute_tilted_circle_position(theta, RADIUS, TILT_ANGLE)
@@ -744,11 +776,14 @@ def main():
             roll, pitch, yaw = imu['euler']
             a_body = np.array(imu['acc_body']).reshape((3,1))
             
-            if usbl_fix_available and usbl['valid']:
+            # EVENT-DRIVEN USBL UPDATE: Only use USBL when new data arrives
+            if usbl_new_data and usbl['valid']:
                 p_world = np.array(usbl['pos_world']).reshape((3,1))
                 kf.update(p_world, roll, pitch, yaw, mode='usbl', dt_override=loop_time)
+                usbl_fix_used = True
             else:
                 kf.update(a_body, roll, pitch, yaw, mode='imu', dt_override=loop_time)
+                usbl_fix_used = False
             
             if depth['valid'] and (iteration % 3 == 0):
                 # depth['depth'] è positiva verso il basso -> z = -depth
@@ -769,7 +804,7 @@ def main():
             
             # Log data
             log_data(timestamp, t_sim, iteration, p_true, imu, usbl, depth,
-                     usbl_fix_available, pos_est, vel_est, acc_est, error_norm)
+                     usbl_fix_used, pos_est, vel_est, acc_est, error_norm)
             
             if ENABLE_PLOTTING or ENABLE_UDP_STREAM:
                 with plot_lock:
@@ -780,7 +815,7 @@ def main():
                     plot_data['est_depth'].append(-pos_est[2])
                     plot_data['meas_depth'].append(depth['depth'])
                     
-                    if usbl_fix_available and usbl['valid']:
+                    if usbl_fix_used and usbl['valid']:
                         plot_data['meas_pos'].append((t_sim, np.array(usbl['pos_world'])))
                     if len(plot_data['time']) > 0:
                         t_min = plot_data['time'][0]
@@ -803,13 +838,13 @@ def main():
             print("IMU    [{}] Euler: [{:7.3f}, {:7.3f}, {:7.3f}]".format(status, roll, pitch, yaw))
             print("              Acc_b: [{:7.3f}, {:7.3f}, {:7.3f}]".format(a_body[0,0], a_body[1,0], a_body[2,0]))
             
-            # USBL status with real/sim indicator
+            # USBL status with real/sim indicator and EVENT indicator
             if usbl_transponder is not None and usbl_transponder.is_connected():
                 usbl_mode = "REAL"
             else:
                 usbl_mode = "SIM "
             
-            status = "FIX" if usbl_fix_available else "----"
+            status = "FIX" if usbl_fix_used else "----"
             if usbl['valid']:
                 extra_info = ""
                 if usbl['integrity'] is not None:
