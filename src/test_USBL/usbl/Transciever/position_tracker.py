@@ -21,7 +21,7 @@ MESSAGE_INTERVAL = 2.0
 RESPONSE_TIMEOUT = 3.0
 
 # ==================== LOGGING CONFIGURATION ====================
-ENABLE_JSON_LOGGING = False                          # Abilita/disabilita logging su file
+ENABLE_JSON_LOGGING = True                          # Abilita/disabilita logging su file
 LOG_DIRECTORY = "src/test_USBL/usbl/logs"           # Directory dove salvare i log
 LOG_FILENAME_PREFIX = "tracker_log"            # Prefisso nome file
 

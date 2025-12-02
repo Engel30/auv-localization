@@ -19,7 +19,7 @@ from collections import defaultdict
 # ==================== CONFIGURATION ====================
 
 # Directory dove cercare i log
-LOG_DIRECTORY = "./logs"
+LOG_DIRECTORY = "src/test_USBL/usbl/logs"
 
 # Quale file analizzare
 ANALYZE_MODE = "LATEST"  # Opzioni: "LATEST", "ALL", "SPECIFIC"
@@ -28,7 +28,7 @@ ANALYZE_MODE = "LATEST"  # Opzioni: "LATEST", "ALL", "SPECIFIC"
 SPECIFIC_LOG_FILE = "./logs/distance_tracker_20241202_153000.jsonl"
 
 # Pattern per trovare i file log
-LOG_FILE_PATTERN = "distance_tracker_*.jsonl"
+LOG_FILE_PATTERN = "tracker_log_*.jsonl"
 
 # Cosa generare
 GENERATE_CSV_DISTANCES = True      # Export distances.csv
