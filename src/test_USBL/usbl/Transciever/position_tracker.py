@@ -11,11 +11,11 @@ TRANSPONDER_ID = 3
 USBL_IP = "192.168.0.139"
 USBL_PORT = 9200
 CODEC = "utf-8"
-SPEED_OF_SOUND_MPS = 1440.0  # Modifica qui per acqua dolce (es. 1440)(default: 1500)
+SPEED_OF_SOUND_MPS = 1500.0  # Modifica qui per acqua dolce (es. 1440)
 MIN_INTEGRITY = 50
 
 # Intervallo tra invii messaggi (secondi)
-MESSAGE_INTERVAL = 2.0
+MESSAGE_INTERVAL = 5.0
 
 # Timeout per aspettare risposte
 RESPONSE_TIMEOUT = 3.0
@@ -179,7 +179,10 @@ state = {
     "last_propagation_time": None,
     "waiting_for_delivery": False,
     "delivery_event": asyncio.Event(),
-    "logger": None  # Inizializzato in main()
+    "logger": None,  # Inizializzato in main()
+    "waiting_for_prop_time": False,
+    "prop_time_value": None,
+    "prop_time_event": asyncio.Event()
 }
 
 
@@ -315,51 +318,41 @@ def decode_response(message: bytes) -> tuple[str, dict]:
         return "ERROR", {}
 
 
-async def send_command_and_wait(writer: asyncio.StreamWriter, 
-                                 reader: asyncio.StreamReader,
-                                 command: str,
-                                 timeout: float = RESPONSE_TIMEOUT) -> tuple[str, dict]:
+async def send_command(writer: asyncio.StreamWriter, command: str):
     """
-    Invia un comando AT e aspetta la risposta
-    
-    Returns:
-        (msg_type, data) della risposta
+    Invia un comando AT senza aspettare risposta
+    La risposta sarà gestita da response_listener
     """
     cmd_bytes = f"+++{command}\n".encode(CODEC)
     writer.write(cmd_bytes)
     await writer.drain()
-    
-    try:
-        response = await asyncio.wait_for(reader.readline(), timeout=timeout)
-        return decode_response(response)
-    except asyncio.TimeoutError:
-        logging.warning(f"Timeout waiting for response to: {command}")
-        return "TIMEOUT", {}
 
 
-async def query_propagation_time(writer: asyncio.StreamWriter,
-                                  reader: asyncio.StreamReader) -> float:
+async def query_propagation_time(writer: asyncio.StreamWriter) -> float:
     """
     Interroga il modem per il propagation time usando AT?T
     
     Returns:
         Propagation time in millisecondi, o None se non disponibile
     """
-    msg_type, data = await send_command_and_wait(writer, reader, "AT?T")
+    state["waiting_for_prop_time"] = True
+    state["prop_time_value"] = None
+    state["prop_time_event"].clear()
     
-    if msg_type == "DIRECT_VALUE":
-        try:
-            prop_time = float(data["value"])
-            return prop_time
-        except (ValueError, KeyError):
-            logging.warning(f"Could not parse propagation time: {data}")
-            return None
+    # Invia comando
+    await send_command(writer, "AT?T")
     
-    return None
+    # Aspetta risposta (gestita da response_listener)
+    try:
+        await asyncio.wait_for(state["prop_time_event"].wait(), timeout=RESPONSE_TIMEOUT)
+        return state["prop_time_value"]
+    except asyncio.TimeoutError:
+        logging.warning("Timeout waiting for AT?T response")
+        state["waiting_for_prop_time"] = False
+        return None
 
 
-async def send_ping_message(writer: asyncio.StreamWriter,
-                             reader: asyncio.StreamReader) -> bool:
+async def send_ping_message(writer: asyncio.StreamWriter) -> bool:
     """
     Invia un messaggio ping con ACK contenente timestamp e counter
     
@@ -387,14 +380,10 @@ async def send_ping_message(writer: asyncio.StreamWriter,
     if state["logger"]:
         state["logger"].log_ping_sent(state["message_counter"], payload)
     
-    # Invia comando
-    msg_type, data = await send_command_and_wait(writer, reader, command)
+    # Invia comando (senza aspettare risposta qui)
+    await send_command(writer, command)
     
-    if msg_type != "AT*SENDIM_RESPONSE" or data.get("status") != "OK":
-        print(f"❌ Failed to send message: {msg_type} {data}")
-        return False
-    
-    print(f"✓ Message accepted by modem")
+    print(f"✓ Message sent")
     
     # Aspetta DELIVEREDIM
     state["waiting_for_delivery"] = True
@@ -409,7 +398,7 @@ async def send_ping_message(writer: asyncio.StreamWriter,
         return False
 
 
-async def message_sender(writer: asyncio.StreamWriter, reader: asyncio.StreamReader):
+async def message_sender(writer: asyncio.StreamWriter):
     """Task che invia messaggi periodicamente"""
     
     # Aspetta un po' prima di iniziare
@@ -418,12 +407,12 @@ async def message_sender(writer: asyncio.StreamWriter, reader: asyncio.StreamRea
     while True:
         try:
             # Invia messaggio
-            delivered = await send_ping_message(writer, reader)
+            delivered = await send_ping_message(writer)
             
             if delivered:
                 # Interroga propagation time
                 print(f"→ Querying propagation time (AT?T)...")
-                prop_time_ms = await query_propagation_time(writer, reader)
+                prop_time_ms = await query_propagation_time(writer)
                 
                 if prop_time_ms is not None:
                     distance = calculate_distance(prop_time_ms)
@@ -470,8 +459,20 @@ async def response_listener(reader: asyncio.StreamReader):
             
             msg_type, data = decode_response(line)
             
+            # Risposta diretta AT?T (propagation time)
+            if msg_type == "DIRECT_VALUE" and state["waiting_for_prop_time"]:
+                try:
+                    prop_time = float(data["value"])
+                    state["prop_time_value"] = prop_time
+                    state["waiting_for_prop_time"] = False
+                    state["prop_time_event"].set()
+                except (ValueError, KeyError):
+                    logging.warning(f"Could not parse propagation time: {data}")
+                    state["waiting_for_prop_time"] = False
+                    state["prop_time_event"].set()
+            
             # DELIVEREDIM - messaggio consegnato
-            if msg_type == "DELIVEREDIM":
+            elif msg_type == "DELIVEREDIM":
                 if state["waiting_for_delivery"]:
                     print(f"✓ Message delivered to transponder ID {data['target_id']}")
                     
@@ -592,7 +593,7 @@ async def main():
     
     # Avvia tasks
     listener_task = asyncio.create_task(response_listener(reader))
-    sender_task = asyncio.create_task(message_sender(writer, reader))
+    sender_task = asyncio.create_task(message_sender(writer))
     
     try:
         await asyncio.gather(listener_task, sender_task)
