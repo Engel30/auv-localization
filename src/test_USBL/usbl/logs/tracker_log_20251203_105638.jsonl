@@ -1,0 +1,6 @@
+{"event_type":"SESSION_START","timestamp":"2025-12-03T10:56:38.828397","configuration":{"transceiver_id":2,"transponder_id":3,"usbl_ip":"192.168.0.139","usbl_port":9200,"sound_speed_mps":1500.0,"message_interval":5.0,"min_integrity":50}}
+{"event_type":"PING_SENT","timestamp":"2025-12-03T10:56:41.861854","data":{"counter":1,"payload":{"timestamp":1764755801.8616583,"counter":1},"target_id":3}}
+{"event_type":"PING_SENT","timestamp":"2025-12-03T10:56:56.877457","data":{"counter":2,"payload":{"timestamp":1764755816.8773246,"counter":2},"target_id":3}}
+{"event_type":"PING_SENT","timestamp":"2025-12-03T10:57:11.893205","data":{"counter":3,"payload":{"timestamp":1764755831.8930209,"counter":3},"target_id":3}}
+{"event_type":"PING_SENT","timestamp":"2025-12-03T10:57:26.909238","data":{"counter":4,"payload":{"timestamp":1764755846.9091053,"counter":4},"target_id":3}}
+{"event_type":"SESSION_END","timestamp":"2025-12-03T10:57:34.661573","data":{"session_duration_s":55.833151,"total_messages_sent":4,"last_distance_m":null,"last_propagation_time_ms":null}}
