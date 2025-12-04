@@ -46,7 +46,7 @@ except ImportError:
 
 # ==================== CONFIG ====================
 CONTROL_LOOP_MS = 50
-ENABLE_PLOTTING = False and MATPLOTLIB_AVAILABLE
+ENABLE_PLOTTING = True and MATPLOTLIB_AVAILABLE
 ENABLE_LOGGING = False  # Flag per abilitare il logging
 ENABLE_UDP_STREAM = True  # Flag per streammare dati via UDP
 UDP_HOST = '127.0.0.1'

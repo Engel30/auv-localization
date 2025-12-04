@@ -7,6 +7,8 @@ import os
 import csv
 import socket
 import pickle
+import sys
+import platform
 from datetime import datetime
 from collections import deque
 
@@ -35,7 +37,14 @@ except ImportError:
     XSENSE_AVAILABLE = False
 
 # ---- Matplotlib (compatibile 2.1.1) ----
+MATPLOTLIB_AVAILABLE = False
 try:
+    import matplotlib
+    # FIX: Set backend before importing pyplot on macOS
+    if platform.system() == 'Darwin':  # macOS
+        matplotlib.use('Agg')  # Use non-interactive backend on Mac
+        print("[INFO] Using non-interactive matplotlib backend for macOS compatibility")
+    
     import matplotlib.pyplot as plt
     # necessario per registrare la proiezione 3D sulle versioni vecchie
     from mpl_toolkits.mplot3d import Axes3D  # noqa: F401
@@ -54,9 +63,15 @@ UDP_PORT = 5555
 USE_REAL_SENSORS = True
 SHOW_FULL_GROUND_TRUTH = False
 
-# Porte / bus sensori reali
-IMU_PORT = '/dev/ttyUSB0'
-DEPTH_I2C_BUS = 0
+# FIX: Platform-specific serial port configuration
+if platform.system() == 'Darwin':  # macOS
+    IMU_PORT = '/dev/tty.usbserial-0001'  # Common Mac USB serial port (update as needed)
+    DEPTH_I2C_BUS = None  # I2C not typically available on Mac
+    print("[INFO] macOS detected - using Mac-specific serial port naming")
+    print("[INFO] If real sensors fail, update IMU_PORT to match your device")
+else:  # Linux
+    IMU_PORT = '/dev/ttyUSB0'
+    DEPTH_I2C_BUS = 0
 
 # USBL Configuration
 USBL_TRANSPONDER_ID = 3
@@ -129,6 +144,10 @@ udp_packet_count = 0
 # USBL globals
 usbl_transponder = None
 last_usbl_request_time = 0.0  # NEW: Track last USBL request time
+
+# Plotting globals - FIX for macOS
+plot_save_counter = 0
+plot_update_flag = threading.Event()
 
 # ==================== HELPER FUNCTIONS ====================
 def compute_tilted_circle_position(theta, radius, tilt_angle, z_center=-5.0):
@@ -463,7 +482,8 @@ def depth_simulation_thread():
     sensor = None
     use_simulation = not USE_REAL_SENSORS
 
-    if USE_REAL_SENSORS and MS5837_AVAILABLE:
+    # FIX: Only try to initialize I2C sensor if I2C bus is available (Linux only)
+    if USE_REAL_SENSORS and MS5837_AVAILABLE and DEPTH_I2C_BUS is not None:
         try:
             sensor = MS5837_30BA()
             if sensor.init(bus=DEPTH_I2C_BUS):
@@ -476,7 +496,10 @@ def depth_simulation_thread():
             print("[DEPTH] Errore inizializzazione MS5837: {}, uso simulazione".format(e))
             use_simulation = True
     elif USE_REAL_SENSORS:
-        print("[DEPTH] Libreria MS5837 non disponibile, uso simulazione depth")
+        if DEPTH_I2C_BUS is None:
+            print("[DEPTH] I2C bus not available on this platform, uso simulazione depth")
+        else:
+            print("[DEPTH] Libreria MS5837 non disponibile, uso simulazione depth")
         use_simulation = True
     else:
         print("[DEPTH] USE_REAL_SENSORS=False, uso simulazione depth")
@@ -516,95 +539,23 @@ def depth_simulation_thread():
 
 # ==================== PLOTTING THREAD ====================
 def plot_thread():
-    """Real-time plotting thread (matplotlib 2.1.1 compatible)"""
+    """Real-time plotting thread - FIX for macOS: saves to file instead of showing"""
+    global plot_save_counter
+    
     if not MATPLOTLIB_AVAILABLE:
         return
     
-    fig = plt.figure(figsize=(14, 10))
+    print("[PLOT] macOS detected - plots will be saved to 'plots/' directory")
+    print("[PLOT] Plots update every 5 seconds")
     
-    # 3D trajectory
-    ax1 = fig.add_subplot(2, 3, 1, projection='3d')
-    ax1.set_xlabel('X [m]')
-    ax1.set_ylabel('Y [m]')
-    ax1.set_zlabel('Z [m]')
-    ax1.set_title('3D Trajectory')
-    
-    # 2D trajectory (X-Y)
-    ax2 = fig.add_subplot(2, 3, 2)
-    ax2.set_xlabel('X [m]')
-    ax2.set_ylabel('Y [m]')
-    ax2.set_title('Top View (X-Y)')
-    ax2.grid(True)
-    ax2.axis('equal')
-    
-    # Error plot
-    ax3 = fig.add_subplot(2, 3, 3)
-    ax3.set_xlabel('Time [s]')
-    ax3.set_ylabel('Position Error [m]')
-    ax3.set_title('Estimation Error')
-    ax3.grid(True)
-    
-    # Position components over time
-    ax4 = fig.add_subplot(2, 3, 4)
-    ax4.set_xlabel('Time [s]')
-    ax4.set_ylabel('Position [m]')
-    ax4.set_title('Position Components')
-    ax4.grid(True)
-    
-    # Depth plot
-    ax5 = fig.add_subplot(2, 3, 5)
-    ax5.set_xlabel('Time [s]')
-    ax5.set_ylabel('Depth [m]')
-    ax5.set_title('Depth Tracking')
-    ax5.grid(True)
-    ax5.invert_yaxis()
-    
-    # Velocity components
-    ax6 = fig.add_subplot(2, 3, 6)
-    ax6.set_xlabel('Time [s]')
-    ax6.set_ylabel('Velocity [m/s]')
-    ax6.set_title('Velocity Components')
-    ax6.grid(True)
-    
-    # Initialize plot elements
-    line_true_3d, = ax1.plot([], [], [], 'b-', label='True', linewidth=1.5)
-    line_est_3d, = ax1.plot([], [], [], 'r-', label='Estimated', linewidth=1.5)
-    scatter_meas_3d = ax1.scatter([], [], [], c='g', marker='o', s=30, label='USBL Meas')
-    
-    line_true_2d, = ax2.plot([], [], 'b-', label='True', linewidth=1.5)
-    line_est_2d, = ax2.plot([], [], 'r-', label='Estimated', linewidth=1.5)
-    scatter_meas_2d = ax2.scatter([], [], c='g', marker='o', s=30, label='USBL Meas')
-    
-    line_error, = ax3.plot([], [], 'r-', linewidth=1.5)
-    
-    line_x, = ax4.plot([], [], 'r-', label='X', linewidth=1.5)
-    line_y, = ax4.plot([], [], 'g-', label='Y', linewidth=1.5)
-    line_z, = ax4.plot([], [], 'b-', label='Z', linewidth=1.5)
-    
-    line_true_depth, = ax5.plot([], [], 'b-', label='True', linewidth=1.5)
-    line_est_depth, = ax5.plot([], [], 'r-', label='Estimated', linewidth=1.5)
-    line_meas_depth, = ax5.plot([], [], 'go', label='Measured', markersize=3)
-    
-    for ax in [ax1, ax2, ax3, ax4, ax5, ax6]:
-        ax.legend(loc='upper right')
-    
-    # Show full ground truth trajectory if enabled
-    if SHOW_FULL_GROUND_TRUTH:
-        full_circle = generate_full_circle(RADIUS, TILT_ANGLE)
-        ax1.plot(full_circle[:,0], full_circle[:,1], full_circle[:,2], 
-                'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
-        ax2.plot(full_circle[:,0], full_circle[:,1], 
-                'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
-    
-    plt.tight_layout()
-    plt.ion()
-    plt.show()
+    # Create plots directory
+    os.makedirs("plots", exist_ok=True)
     
     while running:
         try:
             with plot_lock:
                 if len(plot_data['time']) == 0:
-                    time.sleep(0.1)
+                    time.sleep(1.0)
                     continue
                 
                 ts = list(plot_data['time'])
@@ -616,70 +567,96 @@ def plot_thread():
                 meas_depth = list(plot_data['meas_depth'])
                 meas_pos = plot_data['meas_pos'][:]
             
-            # Update 3D trajectory
-            line_true_3d.set_data(true_arr[:,0], true_arr[:,1])
-            line_true_3d.set_3d_properties(true_arr[:,2])
-            line_est_3d.set_data(est_arr[:,0], est_arr[:,1])
-            line_est_3d.set_3d_properties(est_arr[:,2])
+            # Create new figure for each save
+            fig = plt.figure(figsize=(14, 10))
             
+            # 3D trajectory
+            ax1 = fig.add_subplot(2, 3, 1, projection='3d')
+            ax1.set_xlabel('X [m]')
+            ax1.set_ylabel('Y [m]')
+            ax1.set_zlabel('Z [m]')
+            ax1.set_title('3D Trajectory')
+            
+            # 2D trajectory (X-Y)
+            ax2 = fig.add_subplot(2, 3, 2)
+            ax2.set_xlabel('X [m]')
+            ax2.set_ylabel('Y [m]')
+            ax2.set_title('Top View (X-Y)')
+            ax2.grid(True)
+            ax2.axis('equal')
+            
+            # Error plot
+            ax3 = fig.add_subplot(2, 3, 3)
+            ax3.set_xlabel('Time [s]')
+            ax3.set_ylabel('Position Error [m]')
+            ax3.set_title('Estimation Error')
+            ax3.grid(True)
+            
+            # Position components over time
+            ax4 = fig.add_subplot(2, 3, 4)
+            ax4.set_xlabel('Time [s]')
+            ax4.set_ylabel('Position [m]')
+            ax4.set_title('Position Components')
+            ax4.grid(True)
+            
+            # Depth plot
+            ax5 = fig.add_subplot(2, 3, 5)
+            ax5.set_xlabel('Time [s]')
+            ax5.set_ylabel('Depth [m]')
+            ax5.set_title('Depth Tracking')
+            ax5.grid(True)
+            ax5.invert_yaxis()
+            
+            # Show full ground truth trajectory if enabled
+            if SHOW_FULL_GROUND_TRUTH:
+                full_circle = generate_full_circle(RADIUS, TILT_ANGLE)
+                ax1.plot(full_circle[:,0], full_circle[:,1], full_circle[:,2], 
+                        'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
+                ax2.plot(full_circle[:,0], full_circle[:,1], 
+                        'k--', alpha=0.3, linewidth=1, label='Ground Truth Path')
+            
+            # Plot data
+            ax1.plot(true_arr[:,0], true_arr[:,1], true_arr[:,2], 'b-', label='True', linewidth=1.5)
+            ax1.plot(est_arr[:,0], est_arr[:,1], est_arr[:,2], 'r-', label='Estimated', linewidth=1.5)
             if meas_pos:
                 meas_arr = np.array([p for t, p in meas_pos])
-                scatter_meas_3d._offsets3d = (meas_arr[:,0], meas_arr[:,1], meas_arr[:,2])
+                ax1.scatter(meas_arr[:,0], meas_arr[:,1], meas_arr[:,2], c='g', marker='o', s=30, label='USBL Meas')
             
-            all_data = np.concatenate([true_arr, est_arr])
-            margin = (all_data.max() - all_data.min()) * 0.1 + 1.0
-            ax1.set_xlim(all_data[:,0].min() - margin, all_data[:,0].max() + margin)
-            ax1.set_ylim(all_data[:,1].min() - margin, all_data[:,1].max() + margin)
-            ax1.set_zlim(all_data[:,2].min() - margin, all_data[:,2].max() + margin)
-            
-            # Update 2D trajectory
-            line_true_2d.set_data(true_arr[:,0], true_arr[:,1])
-            line_est_2d.set_data(est_arr[:,0], est_arr[:,1])
-            
+            ax2.plot(true_arr[:,0], true_arr[:,1], 'b-', label='True', linewidth=1.5)
+            ax2.plot(est_arr[:,0], est_arr[:,1], 'r-', label='Estimated', linewidth=1.5)
             if meas_pos:
                 meas_arr = np.array([p for t, p in meas_pos])
-                scatter_meas_2d.set_offsets(meas_arr[:,:2])
+                ax2.scatter(meas_arr[:,0], meas_arr[:,1], c='g', marker='o', s=30, label='USBL Meas')
             
-            xy_margin = (all_data[:,:2].max() - all_data[:,:2].min()) * 0.1 + 1.0
-            ax2.set_xlim(all_data[:,0].min() - xy_margin, all_data[:,0].max() + xy_margin)
-            ax2.set_ylim(all_data[:,1].min() - xy_margin, all_data[:,1].max() + xy_margin)
+            ax3.plot(ts, errors, 'r-', linewidth=1.5)
             
-            # Update error
-            line_error.set_data(ts, errors)
-            error_margin = max(errors) * 0.15 + 0.1
-            ax3.set_ylim(0, max(errors) + error_margin)
-            ax3.set_xlim(min(ts), max(ts))
+            ax4.plot(ts, est_arr[:,0], 'r-', label='X', linewidth=1.5)
+            ax4.plot(ts, est_arr[:,1], 'g-', label='Y', linewidth=1.5)
+            ax4.plot(ts, est_arr[:,2], 'b-', label='Z', linewidth=1.5)
             
-            # Position components
-            line_x.set_data(ts, est_arr[:,0])
-            line_y.set_data(ts, est_arr[:,1])
-            line_z.set_data(ts, est_arr[:,2])
-            
-            all_pos = np.concatenate([est_arr[:,0], est_arr[:,1], est_arr[:,2]])
-            pos_margin = (all_pos.max() - all_pos.min()) * 0.1 + 0.5
-            ax4.set_ylim(all_pos.min() - pos_margin, all_pos.max() + pos_margin)
-            ax4.set_xlim(min(ts), max(ts))
-            
-            # Depth data
             if len(true_depth) > 0:
-                line_true_depth.set_data(ts, true_depth)
-                line_est_depth.set_data(ts, est_depth)
-                line_meas_depth.set_data(ts, meas_depth)
-                
-                all_depths = true_depth + est_depth + meas_depth
-                depth_min = min(all_depths)
-                depth_max = max(all_depths)
-                depth_margin = (depth_max - depth_min) * 0.15 + 0.2
-                
-                ax5.set_ylim(depth_max + depth_margin, depth_min - depth_margin)
-                ax5.set_xlim(min(ts), max(ts))
+                ax5.plot(ts, true_depth, 'b-', label='True', linewidth=1.5)
+                ax5.plot(ts, est_depth, 'r-', label='Estimated', linewidth=1.5)
+                ax5.plot(ts, meas_depth, 'go', label='Measured', markersize=3)
             
-            plt.pause(0.05)
+            for ax in [ax1, ax2, ax3, ax4, ax5]:
+                ax.legend(loc='upper right')
+            
+            plt.tight_layout()
+            
+            # Save figure
+            plot_filename = "plots/kf_plot_{:04d}.png".format(plot_save_counter)
+            plt.savefig(plot_filename, dpi=100)
+            plt.close(fig)
+            
+            plot_save_counter += 1
+            
+            # Update every 5 seconds
+            time.sleep(5.0)
+            
         except Exception as e:
             print("[PLOT] Error: {}".format(e))
-            time.sleep(0.1)
-    
-    plt.close('all')
+            time.sleep(1.0)
 
 # ==================== MAIN CONTROL LOOP ====================
 def main():
@@ -687,11 +664,13 @@ def main():
     
     print("=" * 80)
     print("KALMAN FILTER SENSOR FUSION - EVENT-DRIVEN USBL")
+    print("Platform: {}".format(platform.system()))
+    print("Python: {}".format(sys.version.split()[0]))
     print("Control Loop: {}ms".format(CONTROL_LOOP_MS))
     print("Trajectory: Tilted Circle ({:.0f}°)".format(np.rad2deg(TILT_ANGLE)))
     print("USBL Request Interval: {:.1f}s".format(USBL_REQUEST_INTERVAL))
     print("Full Ground Truth: {}".format('ENABLED' if SHOW_FULL_GROUND_TRUTH else 'DISABLED'))
-    print("Plotting: {}".format('ENABLED' if ENABLE_PLOTTING else 'DISABLED'))
+    print("Plotting: {}".format('ENABLED (saved to files)' if ENABLE_PLOTTING else 'DISABLED'))
     print("Sensors: {}".format('REAL+SIM' if USE_REAL_SENSORS else 'SIM ONLY'))
     print("Logging: {}".format('ENABLED' if ENABLE_LOGGING else 'DISABLED'))
     print("UDP Stream: {}".format('ENABLED' if ENABLE_UDP_STREAM else 'DISABLED'))
