@@ -1,0 +1,1 @@
+{"event_type":"SESSION_START","timestamp":"2025-12-11T12:23:07.534555","configuration":{"transceiver_id":2,"transponder_id":3,"usbl_ip":"192.168.0.139","usbl_port":9200,"sound_speed_mps":1500.0,"message_interval":5.0,"min_integrity":50}}

@@ -26,7 +26,7 @@ INSTANT_MESSAGE_RESPONSE_KEYWORDS = {
 
 # State
 state = {
-    "request_count": 0,
+    "request_count": 0, 
     "position_sent_count": 0,
     "waiting_for_position": False,
     "position_data": None,
