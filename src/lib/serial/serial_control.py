@@ -7,7 +7,7 @@ Invia messaggi JSON con enable, bias e frequenza.
 
 Uso:
     serial_ctrl = SerialControlThread(
-        port="/dev/ttyUSB1",
+        port="/dev/ttyS0",
         baudrate=115200
     )
     serial_ctrl.start()
@@ -36,10 +36,10 @@ class SerialControl(object):
     Gestisce la comunicazione seriale per inviare control data in JSON.
     """
     
-    def __init__(self, port="/dev/ttyUSB1", baudrate=115200, timeout=1.0):
+    def __init__(self, port="/dev/ttyS0", baudrate=115200, timeout=1.0):
         """
         Args:
-            port: Porta seriale (es. "/dev/ttyUSB1", "COM3")
+            port: Porta seriale (es. "/dev/ttyS0", "COM3")
             baudrate: Baud rate (default 115200)
             timeout: Timeout per operazioni seriali [s]
         """
@@ -158,7 +158,7 @@ class SerialControlThread(object):
     Gestisce l'invio asincrono dei control data via seriale.
     """
     
-    def __init__(self, port="/dev/ttyUSB1", baudrate=115200, timeout=1.0):
+    def __init__(self, port="/dev/ttyS0", baudrate=115200, timeout=1.0):
         """
         Args:
             port: Porta seriale
@@ -281,7 +281,7 @@ if __name__ == "__main__":
     print("=" * 50)
     
     # Configurazione - modifica questi parametri
-    SERIAL_PORT = "/dev/ttyUSB1"
+    SERIAL_PORT = "/dev/ttyS0"
     SERIAL_BAUDRATE = 115200
     
     # Crea e avvia il thread seriale

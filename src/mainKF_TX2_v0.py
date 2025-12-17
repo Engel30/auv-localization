@@ -46,7 +46,7 @@ USBL_TRANSCEIVER_POS = np.array([0.0, 0.0, 0.0])
 
 # Serial Control Configuration
 SERIAL_ENABLED = True
-SERIAL_PORT = "/dev/ttyUSB1"
+SERIAL_PORT = "/dev/ttyS0"
 SERIAL_BAUDRATE = 115200
 
 CALIBRATION_FILE = "imu_bias_calibration.json"
