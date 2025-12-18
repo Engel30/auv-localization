@@ -1,0 +1,2 @@
+timestamp_abs,timestamp_rel,msg_num,mode,east,north,up,bearing_deg,elevation_deg,distance,range_3d,integrity,enable,bias_deg,freq_hz,use_range_only
+1765983343.7748303,0.0244293212890625,1,ANGLES,0.0,0.0,0.0,0.0,0.0,0.0,4.6845,100,True,0.0,0.5,False

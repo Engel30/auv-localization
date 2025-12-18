@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 USBL Transceiver (Mission Control)
-Riceve telemetria dal transponder e risponde con distanza 3D calcolata via AT?T + Logs
+Riceve telemetria dal transponder e risponde con distanza 3D calcolata via AT?T
 """
 
 import asyncio
@@ -10,6 +10,9 @@ import struct
 import base64
 import time
 import math
+import os
+import csv
+from datetime import datetime
 
 # =============================================================================
 #  CONFIGURATION
@@ -35,6 +38,10 @@ CONTROL_ENABLE = True
 CONTROL_BIAS_DEG = 0.0
 CONTROL_FREQ_HZ = 0.5
 CONTROL_USE_RANGE_ONLY = False
+
+# LOGGING CONFIGURATION
+ENABLE_LOGGING = True
+LOG_DIRECTORY = "Transciever/log_usbl_messages"
 
 # =============================================================================
 #  MESSAGE PROTOCOL
@@ -94,6 +101,121 @@ def encode_mc_message(timestamp, mode, east, north, up, bearing_rad, elevation_r
 
 
 # =============================================================================
+#  CSV LOGGER CLASS
+# =============================================================================
+class TransceiverLogger(object):
+    """Logger per messaggi TX e RX del transceiver."""
+    
+    def __init__(self, log_dir=LOG_DIRECTORY, enabled=ENABLE_LOGGING):
+        self.enabled = enabled
+        if not self.enabled:
+            print("[LOG] Logging disabilitato")
+            return
+        
+        # Crea directory se non esiste
+        if not os.path.exists(log_dir):
+            os.makedirs(log_dir)
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
+        # File separati per TX e RX
+        self.rx_file = os.path.join(log_dir, "tc_rx_tp_{}.csv".format(timestamp))
+        self.tx_file = os.path.join(log_dir, "tc_tx_tp_{}.csv".format(timestamp))
+        
+        self.t0 = None
+        self.rx_count = 0
+        self.tx_count = 0
+        
+        # Apri file RX (Transponder -> Transceiver)
+        self.rx_fp = open(self.rx_file, 'w')
+        self.rx_writer = csv.writer(self.rx_fp)
+        self.rx_writer.writerow([
+            'timestamp_abs', 'timestamp_rel', 'msg_num',
+            'vehicle_timestamp', 'x', 'y', 'z',
+            'roll', 'pitch', 'yaw',
+            'battery_pct', 'voltage',
+            'temperature', 'pressure',
+            'integrity', 'rssi'
+        ])
+        self.rx_fp.flush()
+        
+        # Apri file TX (Transceiver -> Transponder)
+        self.tx_fp = open(self.tx_file, 'w')
+        self.tx_writer = csv.writer(self.tx_fp)
+        self.tx_writer.writerow([
+            'timestamp_abs', 'timestamp_rel', 'msg_num',
+            'mode', 'east', 'north', 'up',
+            'bearing_deg', 'elevation_deg',
+            'distance', 'range_3d', 'integrity',
+            'enable', 'bias_deg', 'freq_hz', 'use_range_only'
+        ])
+        self.tx_fp.flush()
+        
+        print("[LOG] Logging abilitato")
+        print("[LOG] RX: {}".format(self.rx_file))
+        print("[LOG] TX: {}".format(self.tx_file))
+    
+    def _get_timestamps(self):
+        now = time.time()
+        if self.t0 is None:
+            self.t0 = now
+        return now, now - self.t0
+    
+    def log_rx(self, vehicle_data, integrity=0, rssi=0):
+        """Log messaggio ricevuto dal transponder."""
+        if not self.enabled:
+            return
+        
+        t_abs, t_rel = self._get_timestamps()
+        self.rx_count += 1
+        
+        pos = vehicle_data['pose']['position']
+        ori = vehicle_data['pose']['orientation']
+        bat = vehicle_data['sensor_data']['battery']
+        dep = vehicle_data['sensor_data']['depth_sensor']
+        
+        self.rx_writer.writerow([
+            t_abs, t_rel, self.rx_count,
+            vehicle_data['timestamp'],
+            pos['x'], pos['y'], pos['z'],
+            ori['roll'], ori['pitch'], ori['yaw'],
+            bat['charge_percent'], bat['voltage_volts'],
+            dep['temperature'], dep['pressure'],
+            integrity, rssi
+        ])
+        self.rx_fp.flush()
+    
+    def log_tx(self, mode, east, north, up, bearing_deg, elevation_deg,
+               distance, range_3d, integrity, enable, bias_deg, freq_hz,
+               use_range_only):
+        """Log messaggio inviato al transponder."""
+        if not self.enabled:
+            return
+        
+        t_abs, t_rel = self._get_timestamps()
+        self.tx_count += 1
+        
+        self.tx_writer.writerow([
+            t_abs, t_rel, self.tx_count,
+            mode, east, north, up,
+            bearing_deg, elevation_deg,
+            distance, range_3d, integrity,
+            enable, bias_deg, freq_hz, use_range_only
+        ])
+        self.tx_fp.flush()
+    
+    def close(self):
+        if not self.enabled:
+            return
+        
+        print("[LOG] Messaggi RX: {}".format(self.rx_count))
+        print("[LOG] Messaggi TX: {}".format(self.tx_count))
+        
+        self.rx_fp.close()
+        self.tx_fp.close()
+
+
+# =============================================================================
 #  STATE
 # =============================================================================
 state = {
@@ -111,7 +233,10 @@ state = {
     # Delivery state
     "waiting_delivery": False,
     "delivery_event": None,
-    "delivery_success": False
+    "delivery_success": False,
+    
+    # Logger
+    "logger": None
 }
 
 
@@ -230,20 +355,21 @@ async def query_propagation_time():
 
 
 async def send_response_to_transponder(vehicle_data, range_3d):
-    """Invia risposta al transponder con distanza 3D."""
+    """
+    Invia risposta al transponder con dati USBL e controllo.
+    """
+    timestamp = get_relative_timestamp()
     
-    ts = get_relative_timestamp()
-    
-    # Prepara dati USBL (mode=0 perché usiamo solo range)
+    # Per ora usiamo solo range_3d, mode = 0 (ANGLES)
     payload = encode_mc_message(
-        timestamp=ts,
-        mode=0,  # ANGLES mode (non abbiamo coordinate ENU)
+        timestamp=timestamp,
+        mode=0,  # ANGLES
         east=0.0,
         north=0.0,
         up=0.0,
         bearing_rad=0.0,
         elevation_rad=0.0,
-        distance=range_3d,  # Distanza stimata
+        distance=0.0,  # Non usato con range_3d
         integrity=DEFAULT_INTEGRITY,
         enable=CONTROL_ENABLE,
         bias_deg=CONTROL_BIAS_DEG,
@@ -272,7 +398,22 @@ async def send_response_to_transponder(vehicle_data, range_3d):
     
     state["messages_sent"] += 1
     
-    # Log messaggio inviato
+    # Log messaggio inviato su CSV
+    if state["logger"]:
+        state["logger"].log_tx(
+            mode='ANGLES',
+            east=0.0, north=0.0, up=0.0,
+            bearing_deg=0.0, elevation_deg=0.0,
+            distance=0.0,
+            range_3d=range_3d,
+            integrity=DEFAULT_INTEGRITY,
+            enable=CONTROL_ENABLE,
+            bias_deg=CONTROL_BIAS_DEG,
+            freq_hz=CONTROL_FREQ_HZ,
+            use_range_only=CONTROL_USE_RANGE_ONLY
+        )
+    
+    # Log messaggio inviato su console
     pos = vehicle_data['pose']['position']
     ori = vehicle_data['pose']['orientation']
     
@@ -367,7 +508,15 @@ async def response_listener(reader):
                             bat = vehicle_data['sensor_data']['battery']
                             dep = vehicle_data['sensor_data']['depth_sensor']
                             
-                            # Log messaggio ricevuto
+                            # Log messaggio ricevuto su CSV
+                            if state["logger"]:
+                                state["logger"].log_rx(
+                                    vehicle_data,
+                                    integrity=data.get('integrity', 0),
+                                    rssi=data.get('rssi', 0)
+                                )
+                            
+                            # Log messaggio ricevuto su console
                             print("\n" + "=" * 70)
                             print("[MSG #{}] TRANSPONDER -> TRANSCEIVER".format(
                                 state["messages_received"]))
@@ -414,6 +563,9 @@ async def main():
     state["delivery_event"] = asyncio.Event()
     state["session_start"] = time.time()
     
+    # Inizializza logger
+    state["logger"] = TransceiverLogger()
+    
     print("=" * 70)
     print("USBL TRANSCEIVER (Mission Control)")
     print("=" * 70)
@@ -453,6 +605,10 @@ async def main():
             pass
         
         writer.close()
+        
+        # Chiudi logger
+        if state["logger"]:
+            state["logger"].close()
         
         print("\n" + "=" * 70)
         print("SUMMARY")

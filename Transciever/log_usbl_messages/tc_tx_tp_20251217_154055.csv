@@ -1,0 +1,5 @@
+timestamp_abs,timestamp_rel,msg_num,mode,east,north,up,bearing_deg,elevation_deg,distance,range_3d,integrity,enable,bias_deg,freq_hz,use_range_only
+1765982456.4867077,1.2248225212097168,1,RANGE,0.0,0.0,0.0,0.0,0.0,0.0,7.4475,100,True,0.0,0.5,False
+1765982466.2147195,10.952834367752075,2,RANGE,0.0,0.0,0.0,0.0,0.0,0.0,7.4475,100,True,0.0,0.5,False
+1765982477.669792,22.407906770706177,3,RANGE,0.0,0.0,0.0,0.0,0.0,0.0,7.4475,100,True,0.0,0.5,False
+1765982489.103171,33.841285943984985,4,RANGE,0.0,0.0,0.0,0.0,0.0,0.0,7.4475,100,True,0.0,0.5,False
