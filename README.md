@@ -27,7 +27,8 @@ High-level navigation and guidance system for autonomous underwater vehicles bas
     - 5.4 [Starting the Software](#54-starting-the-software)
 6. [Execution Examples](#6-execution-examples)
     - 6.1 [Practical Use Case](#61-practical-use-case)
-    - 6.2 [Expected Output](#62-expected-output)
+    - 6.2 [System Demo](#62-system-demo)
+    - 6.3 [Expected Output](#63-expected-output)
 7. [Project Deliverables](#7-project-deliverables)
 
 ---
@@ -387,7 +388,53 @@ python3 src/mainKF_TX2_v0.py
     - Telemetry is sent to the transceiver
     - Logs are saved to `sensor_logs/`
 
-### 6.2 Expected Output
+### 6.2 System Demo
+
+The system was tested as a whole inside the fountain of the Montedago Campus at Università Politecnica delle Marche. In this scenario, the communication and localization capabilities of the developed system were validated.
+
+The experimental setup consists of a buoy connected to the USBL Transceiver. The transceiver is connected via cable to a powerbank for power supply and to a PC via Ethernet interface.
+
+<p align="center">
+    <img src="media/box_boa.jpeg" width="60%" alt="Junction box for USBL Transceiver connections and USBL Transceiver submerged with buoy">
+</p>
+
+*Figure 6: Junction box for USBL Transceiver connections (left) and USBL Transceiver submerged in water with the buoy (right)*
+
+The underwater vehicle in this test scenario consists only of a tube containing the localization and communication system, designed to be connected to the actual vehicle which also includes the actuators needed for navigation.
+
+<p align="center">
+    <img src="media/veicolo1.jpeg" width="50%" alt="Localization and communication module before immersion">
+</p>
+
+*Figure 7: The localization and communication module before immersion*
+
+The module, shown in Figure 7, is then connected to a system of floats and a towing rope to move it within the pool. During this phase, before immersion, the code for communication and localization is started as explained in detail in section [5.4 Starting the Software](#54-starting-the-software).
+
+<p align="center">
+    <img src="media/veicolo2.jpeg" width="50%" alt="Module connected to floats and submerged in water">
+</p>
+
+*Figure 8: The module connected to floats and submerged in water*
+
+At this point, the system is ready and the planned tests can be conducted.
+
+#### Screenshots and Expected Results
+
+During system operation, the only means of communication with the underwater vehicle is the USBL system, which unfortunately allows position data updates only every 1.5 seconds.
+
+This update frequency is sufficient in a normal use scenario, once the system is perfectly calibrated. To analyze the filter results in depth, it is possible to examine the complete logs saved locally on the device. Once the vehicle has surfaced, the mission logs can be downloaded and the collected data can be viewed at a much higher frequency (50 Hz).
+
+In Figure 9, you can observe the results obtained from analyzing the logs of a test performed in the pool.
+
+<p align="center">
+    <img src="media/ekf_fusion_result.png" width="80%" alt="Pool test log analysis">
+</p>
+
+*Figure 9: Analysis of logs from a pool test*
+
+The results shown in Figure 9 confirm the correct operation of the filter. After approximately second 350, the vehicle surfaced, which is why the USBL system no longer provided any information. From the graphs, you can see the filter diverging after this point.
+
+### 6.3 Expected Output
 
 #### System Startup
 
