@@ -28,9 +28,7 @@ High-level navigation and guidance system for autonomous underwater vehicles bas
 6. [Execution Examples](#6-execution-examples)
     - 6.1 [Practical Use Case](#61-practical-use-case)
     - 6.2 [Expected Output](#62-expected-output)
-7. [Gantt](#7-gantt)
-8. [TC/TP](#8-tctp)
-9. [KPI](#9-kpi)
+7. [Project Deliverables](#7-project-deliverables)
 
 ---
 
@@ -52,6 +50,10 @@ Sensor fusion is performed using a **9-state Extended Kalman Filter (EKF)** that
 | **BlueRobotics MS5837-30BA** | Depth (pressure) | 10 Hz | I2C |
 | **USBL Transceiver** | Acoustic range, Bearing, Elevation | 0.5 Hz | TCP/IP |
 
+<p align="center">
+    <img src="media/kf_diag-KF.svg" width="80%" alt="Extended Kalman Filter Diagram">
+</p>
+
 The software supports:
 
 - Bidirectional communication with control station via USBL
@@ -62,6 +64,10 @@ The software supports:
 #### USBL Communication Protocol
 
 The system uses a bidirectional **REQUEST-RESPONSE** protocol via USBL acoustic modem:
+
+<p align="center">
+    <img src="media/usbl_communication.svg" width="70%" alt="USBL Communication Protocol">
+</p>
 
 **Transponder (Vehicle) → Transceiver (Surface)**
 
@@ -453,45 +459,15 @@ sensor_logs/
 
 ---
 
-## 7. Gantt
+## 7. Project Deliverables
 
-> **Note**: Insert the project Gantt chart here, showing development phases as executed and evaluated.
+The complete project documentation, including planning and evaluation materials, is available in the [`documents/Deliverables`](documents/Deliverables) folder. This includes:
 
-| Phase | Start Date | End Date | Duration | Status |
-|-------|------------|----------|----------|--------|
-| Requirements analysis | -- | -- | -- | -- |
-| Sensor driver development | -- | -- | -- | -- |
-| EKF implementation | -- | -- | -- | -- |
-| USBL integration | -- | -- | -- | -- |
-| Pool testing | -- | -- | -- | -- |
-| Final validation | -- | -- | -- | -- |
-
----
-
-## 8. TC/TP
-
-> **Note**: Insert the Time Cost / Time Plan analysis here as executed and evaluated.
-
-| Activity | Planned Time (hours) | Actual Time (hours) | Deviation |
-|----------|----------------------|---------------------|-----------|
-| Software development | -- | -- | -- |
-| Testing and debugging | -- | -- | -- |
-| Documentation | -- | -- | -- |
-| **Total** | -- | -- | -- |
-
----
-
-## 9. KPI
-
-> **Note**: Insert the Key Performance Indicators here as executed and evaluated.
-
-| KPI | Target | Result | Status |
-|-----|--------|--------|--------|
-| EKF loop frequency | ≥50 Hz | -- | -- |
-| Position error (USBL) | <0.5 m | -- | -- |
-| Telemetry latency | <100 ms | -- | -- |
-| System uptime | >95% | -- | -- |
-| Test coverage | >80% | -- | -- |
+- **Gantt Chart** – Project timeline with development phases and milestones
+- **SOTA (State of the Art)** – Analysis of existing technologies and scientific literature
+- **TC/TP (Test Cases / Test Procedures)** – Detailed test cases and validation procedures
+- **KPI (Key Performance Indicators)** – Performance metrics and acceptance criteria
+- **Sensor Measurement Evaluation** – Analysis and validation of sensor performance
 
 ---
 
