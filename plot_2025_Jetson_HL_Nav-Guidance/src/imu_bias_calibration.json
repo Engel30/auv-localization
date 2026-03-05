@@ -1,0 +1,34 @@
+{
+    "timestamp": "2025-11-21T11:36:14.554165Z",
+    "port": "/dev/ttyUSB0",
+    "duration_s": 60.0,
+    "sample_frequency_hz": 100.0,
+    "num_samples_acc": 301,
+    "num_samples_gyr": 301,
+    "use_facc": true,
+    "acc_bias": [
+        0.007321609077012891,
+        -0.021927085131727024,
+        0.0006930899382429662
+    ],
+    "acc_noise_std": [
+        0.011837752469226009,
+        0.011577559639249725,
+        0.010169891499158324
+    ],
+    "gyr_bias": [
+        -0.008607302165042572,
+        -0.0011537558601538154,
+        0.006156882865623605
+    ],
+    "gyr_noise_std": [
+        0.002137598713186007,
+        0.0022599717099619017,
+        0.001672400256621178
+    ],
+    "units": {
+        "acc": "m/s^2",
+        "gyr": "rad/s"
+    },
+    "notes": "Bias e deviazione standard stimati con IMU ferma. Se use_facc=True, acc_bias dovrebbe essere vicino a [0,0,0]. Se use_facc=False, ci si aspetta [0,0,-9.81] circa."
+}
