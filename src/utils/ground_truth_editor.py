@@ -110,6 +110,12 @@ class GroundTruthEditor:
         self.use_spline = True   # True = cubic spline, False = linear segments
 
         self.fig, self.ax = plt.subplots(figsize=(9, 9))
+        # Disable default matplotlib keybindings that clash with editor controls
+        for action in ['save', 'quit', 'quit_all', 'fullscreen']:
+            try:
+                plt.rcParams[f'keymap.{action}'] = []
+            except KeyError:
+                pass
         build_axes(self.ax, ekf_xy)
 
         self.wp_scatter   = self.ax.scatter([], [], s=80, color='red',

@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 from matplotlib.gridspec import GridSpec
 
 # ============================================================================
-# DATA LOADING
+# UTILITY
 # ============================================================================
 
 def find_latest_csv(directory, prefix):
@@ -22,7 +22,31 @@ def find_latest_csv(directory, prefix):
         raise FileNotFoundError(f"No file found matching pattern: {pattern}")
     return max(files, key=os.path.getmtime)
 
+
+def apply_time_window(df, col, t_start, t_end):
+    """Return rows of df where df[col] is within [t_start, t_end]."""
+    if t_start is not None:
+        df = df[df[col] >= t_start]
+    if t_end is not None:
+        df = df[df[col] <= t_end]
+    return df.reset_index(drop=True)
+
+# ============================================================================
+# CONFIGURATION
+# ============================================================================
+
 DATA_DIR = "sensor_logs"
+T_START  = None
+T_END    = None
+
+try:
+    from ekf_config import T_START, T_END
+except (ImportError, AttributeError):
+    pass
+
+# ============================================================================
+# DATA LOADING
+# ============================================================================
 
 print("=== SENSOR DIAGNOSTICS ===\n")
 print("Loading data...")
@@ -30,6 +54,12 @@ print("Loading data...")
 imu_data = pd.read_csv(find_latest_csv(DATA_DIR, "imu"))
 usbl_data = pd.read_csv(find_latest_csv(DATA_DIR, "usbl"))
 depth_data = pd.read_csv(find_latest_csv(DATA_DIR, "depth"))
+
+if T_START is not None or T_END is not None:
+    print(f"Applying time window filter: [{T_START}, {T_END}] s")
+    imu_data   = apply_time_window(imu_data,   'timestamp_rel', T_START, T_END)
+    usbl_data  = apply_time_window(usbl_data,  'timestamp_rel', T_START, T_END)
+    depth_data = apply_time_window(depth_data, 'timestamp_rel', T_START, T_END)
 
 # ============================================================================
 # IMU ANALYSIS — BIAS AND NOISE
@@ -174,11 +204,12 @@ ax3.set_title('USBL Range', fontweight='bold')
 ax3.legend(fontsize=8)
 ax3.grid(True, alpha=0.3)
 
-# Plot 4: Depth Profile — marine convention (surface at top, Y inverted)
+# Plot 4: Depth Profile — marine convention (depth positive downward, Y-axis inverted)
 ax4 = fig.add_subplot(gs[1, 1])
-ax4.plot(depth_data['timestamp_rel'], depth_values,
+depth_plot = np.abs(depth_values)
+ax4.plot(depth_data['timestamp_rel'], depth_plot,
          '-', color='teal', linewidth=1.5)
-ax4.fill_between(depth_data['timestamp_rel'], depth_values,
+ax4.fill_between(depth_data['timestamp_rel'], depth_plot,
                  alpha=0.15, color='teal')
 ax4.invert_yaxis()
 ax4.set_xlabel('Time [s]')

@@ -600,9 +600,9 @@ if __name__ == "__main__":
     ax2.grid(True, alpha=0.3)
     ax2.legend(fontsize=7)
 
-    # Depth profile — raw depth sensor data (Y-axis inverted, marine convention)
+    # Depth profile — marine convention (depth positive downward, Y-axis inverted)
     ax3 = fig.add_subplot(gs_right[1])
-    depth_raw  = depth_data['depth'].values
+    depth_raw  = np.abs(depth_data['depth'].values)
     time_depth_plot = depth_data['timestamp_rel'].values
     ax3.plot(time_depth_plot, depth_raw, '-', color='teal', linewidth=1.5)
     ax3.fill_between(time_depth_plot, depth_raw, alpha=0.15, color='teal')
