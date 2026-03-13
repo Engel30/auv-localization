@@ -115,7 +115,7 @@ class GroundTruthEditor:
         self.wp_scatter   = self.ax.scatter([], [], s=80, color='red',
                                              zorder=6, label='GT waypoints')
         self.spline_line, = self.ax.plot([], [], 'g-', lw=2.5,
-                                          label='Ground truth', zorder=5)
+                                          label='Reference trajectory', zorder=5)
         self.wp_labels    = []
 
         self.ax.legend(loc='upper right', fontsize=9)
@@ -248,7 +248,7 @@ class GroundTruthEditor:
 
         mode      = 'spline' if self.use_spline else 'segments'
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        filename  = f'ground_truth_{timestamp}.csv'
+        filename  = os.path.join('sensor_logs', f'ground_truth_{timestamp}.csv')
         df = pd.DataFrame(path_pts, columns=['x', 'y'])
         df.to_csv(filename, index=False)
         print(f"  Ground truth saved: {filename}  ({len(df)} points, mode: {mode})")

@@ -228,7 +228,7 @@ def main():
     # Ground truth overlay
     if gt_xy is not None:
         ax1.plot(gt_xy[:, 0], gt_xy[:, 1], 'm--', lw=2,
-                 label='Ground truth', zorder=3, alpha=0.85)
+                 label='Reference trajectory', zorder=3, alpha=0.85)
 
     # EKF trajectory coloured by elapsed time
     points   = np.array([x_new, y_new]).T.reshape(-1, 1, 2)

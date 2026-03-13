@@ -12,8 +12,8 @@ import numpy as np
 # INITIAL STATE
 # ============================================================================
 # Initial robot position [x, y, z] in metres
-INITIAL_POSITION = [0.80, -0.80, -0.35]
-#INITIAL_POSITION = [6.5, 3.0, 0.0]
+#INITIAL_POSITION = [0.80, -0.80, -0.35]
+INITIAL_POSITION = [6.5, 3.0, 0.0]
 # INITIAL_POSITION = [0.0, 0.0, 0.0]
 
 # Initial robot velocity [vx, vy, vz] in m/s
@@ -33,7 +33,7 @@ INITIAL_VELOCITY = [0.0, 0.0, 0.0]   # starts from rest
 #   T_START = 30.0
 #   T_END   = 90.0
 T_START = None
-T_END   = None
+T_END   = 350 #None
 
 # ============================================================================
 # PROCESS NOISE (Q Matrix)

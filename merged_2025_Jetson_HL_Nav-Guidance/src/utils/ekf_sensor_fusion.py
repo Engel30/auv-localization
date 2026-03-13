@@ -445,6 +445,12 @@ if __name__ == "__main__":
     usbl_data  = pd.read_csv(find_latest_csv(DATA_DIR, "usbl"))
     depth_data = pd.read_csv(find_latest_csv(DATA_DIR, "depth"))
 
+    # --- Analyse sensor noise on FULL dataset (before time window) ---
+    # This ensures covariance matrices are always calibrated on the complete
+    # recording and do not change when T_START / T_END are adjusted.
+    print("\n  Estimating sensor noise from full dataset (calibration)...")
+    sensor_noise = analyze_sensor_noise(imu_data, usbl_data, depth_data, imu_calibration)
+
     # --- Apply time window filter ---
     if T_START is not None or T_END is not None:
         print(f"\n  Applying time window filter: [{T_START}, {T_END}] s")
@@ -459,9 +465,6 @@ if __name__ == "__main__":
         print(f"    IMU:   {n_imu_before} → {len(imu_data)} samples")
         print(f"    USBL:  {n_usbl_before} → {len(usbl_data)} fixes")
         print(f"    Depth: {n_depth_before} → {len(depth_data)} samples")
-
-    # --- Analyse sensor noise ---
-    sensor_noise = analyze_sensor_noise(imu_data, usbl_data, depth_data, imu_calibration)
 
     # --- Run EKF ---
     trajectory = run_sensor_fusion(imu_data, usbl_data, depth_data, sensor_noise,
@@ -597,16 +600,16 @@ if __name__ == "__main__":
     ax2.grid(True, alpha=0.3)
     ax2.legend(fontsize=7)
 
-    # Depth profile — Y-axis inverted (marine convention: surface at top)
+    # Depth profile — raw depth sensor data (Y-axis inverted, marine convention)
     ax3 = fig.add_subplot(gs_right[1])
-    depth_z = trajectory[:, 3]
-    ax3.plot(time_new, depth_z, '-', color='teal', linewidth=1.5)
-    ax3.fill_between(time_new, depth_z, alpha=0.15, color='teal')
+    depth_raw  = depth_data['depth'].values
+    time_depth_plot = depth_data['timestamp_rel'].values
+    ax3.plot(time_depth_plot, depth_raw, '-', color='teal', linewidth=1.5)
+    ax3.fill_between(time_depth_plot, depth_raw, alpha=0.15, color='teal')
     ax3.invert_yaxis()
-    ax3.set_xlabel('Time [s]', fontsize=9)
-    ax3.set_ylabel('Depth [m]', fontsize=9)
-    ax3.set_title('Depth Profile', fontsize=10, fontweight='bold')
-    ax3.tick_params(labelsize=8)
+    ax3.set_xlabel('Time [s]')
+    ax3.set_ylabel('Depth [m]')
+    ax3.set_title('Depth Profile', fontweight='bold')
     ax3.grid(True, alpha=0.3)
 
     plt.tight_layout()
